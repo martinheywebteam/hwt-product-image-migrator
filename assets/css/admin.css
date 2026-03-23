@@ -951,6 +951,58 @@ h2.hwt-title {
 }
 
 /* ============================================================
+   MODAL
+   ============================================================ */
+.hwt-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    animation: hwtFadeIn 0.2s ease;
+}
+
+.hwt-modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: hwtSlideDown 0.3s ease;
+}
+
+.hwt-modal-icon {
+    margin-bottom: 16px;
+}
+
+.hwt-modal h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--hwt-gray-900);
+    margin: 0 0 12px;
+}
+
+.hwt-modal p {
+    font-size: 13px;
+    color: var(--hwt-gray-600);
+    line-height: 1.6;
+    margin: 0 0 8px;
+}
+
+.hwt-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.hwt-modal-actions .hwt-btn { min-width: 120px; justify-content: center; }
+
+/* ============================================================
    HOW IT WORKS TAB
    ============================================================ */
 .hwt-guide-intro {

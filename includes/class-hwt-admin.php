@@ -499,12 +499,32 @@ class HWT_Admin {
                         <div style="margin-top:20px; padding:16px; background:#fff3cd; border:1px solid #ffc107; border-radius:6px;">
                             <h3 style="margin:0 0 8px; font-size:14px; color:#856404;">Cleanup Imported Attachments</h3>
                             <p style="margin:0 0 12px; font-size:13px; color:#856404;">Delete ALL attachments created by this plugin (tagged with <code>_hwt_source_url</code>). Also clears product image assignments for affected products. Use this before a fresh re-import.</p>
-                            <button id="hwt-cleanup-btn" class="hwt-btn hwt-btn-secondary">
-                                <span class="hwt-btn-text">Delete All Imported Attachments</span>
-                                <span class="hwt-spinner"></span>
+                            <button id="hwt-cleanup-trigger" class="hwt-btn hwt-btn-secondary">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                <span>Delete All Imported Attachments</span>
                             </button>
                             <span id="hwt-cleanup-result" style="margin-left:12px; font-size:13px;"></span>
                         </div>
+
+            <!-- Cleanup confirmation modal -->
+            <div id="hwt-modal-overlay" class="hwt-modal-overlay hwt-hidden">
+                <div class="hwt-modal">
+                    <div class="hwt-modal-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
+                    <h3>Delete All Imported Attachments?</h3>
+                    <p>This will <strong>permanently delete</strong> all image attachments created by this plugin and clear product image assignments for affected products.</p>
+                    <p>This action <strong>cannot be undone</strong>. Only proceed if you want a fresh start before re-importing.</p>
+                    <div class="hwt-modal-actions">
+                        <button id="hwt-modal-cancel" class="hwt-btn hwt-btn-secondary">Cancel</button>
+                        <button id="hwt-cleanup-btn" class="hwt-btn" style="background:#dc3545; color:#fff;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            <span class="hwt-btn-text">Yes, Delete Everything</span>
+                            <span class="hwt-spinner"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
                         <div id="hwt-diag-results" class="hwt-hidden" style="margin-top:16px;">
                             <textarea id="hwt-diag-output" rows="25" readonly style="width:100%;font-family:monospace;font-size:12px;background:#f8f9fa;padding:12px;border:1px solid #dee2e6;border-radius:6px;"></textarea>

@@ -323,19 +323,38 @@
     });
 
     // =========================================================================
-    // Cleanup
+    // Cleanup (with in-page modal)
     // =========================================================================
+    $('#hwt-cleanup-trigger').on('click', function (e) {
+        e.preventDefault();
+        $('#hwt-modal-overlay').removeClass('hwt-hidden');
+    });
+
+    $('#hwt-modal-cancel').on('click', function (e) {
+        e.preventDefault();
+        $('#hwt-modal-overlay').addClass('hwt-hidden');
+    });
+
+    // Close modal on overlay click.
+    $('#hwt-modal-overlay').on('click', function (e) {
+        if (e.target === this) {
+            $(this).addClass('hwt-hidden');
+        }
+    });
+
+    // Close modal on Escape key.
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' && !$('#hwt-modal-overlay').hasClass('hwt-hidden')) {
+            $('#hwt-modal-overlay').addClass('hwt-hidden');
+        }
+    });
+
     $('#hwt-cleanup-btn').on('click', function (e) {
         e.preventDefault();
         var $btn = $(this);
         if ($btn.hasClass('loading')) return;
 
-        if (!confirm('This will permanently delete ALL attachments created by this plugin and clear product image assignments.\n\nAre you sure?')) {
-            return;
-        }
-
         $btn.addClass('loading');
-        $('#hwt-cleanup-result').text('Cleaning up...');
 
         $.ajax({
             url: hwtPIM.ajaxUrl,
@@ -346,6 +365,7 @@
             },
             success: function (res) {
                 $btn.removeClass('loading');
+                $('#hwt-modal-overlay').addClass('hwt-hidden');
                 if (res.success) {
                     $('#hwt-cleanup-result').text(
                         'Done! Deleted ' + res.data.deleted + ' attachments, cleared ' + res.data.products_cleared + ' products.'
@@ -356,6 +376,7 @@
             },
             error: function () {
                 $btn.removeClass('loading');
+                $('#hwt-modal-overlay').addClass('hwt-hidden');
                 $('#hwt-cleanup-result').text('Request failed.').css('color', '#dc3545');
             },
         });
