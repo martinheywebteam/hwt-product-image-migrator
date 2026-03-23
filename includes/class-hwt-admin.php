@@ -106,40 +106,13 @@ class HWT_Admin {
                 </div>
             </div>
 
-            <!-- How it works - step indicator -->
-            <div class="hwt-steps">
-                <div class="hwt-step" data-tab="scan">
-                    <div class="hwt-step-num">1</div>
-                    <div class="hwt-step-text">
-                        <strong>Scan</strong>
-                        <span>Find missing images</span>
-                    </div>
-                </div>
-                <div class="hwt-step-arrow">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-                <div class="hwt-step" data-tab="export">
-                    <div class="hwt-step-num">2</div>
-                    <div class="hwt-step-text">
-                        <strong>Export</strong>
-                        <span>Download image CSV</span>
-                    </div>
-                </div>
-                <div class="hwt-step-arrow">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                </div>
-                <div class="hwt-step" data-tab="import">
-                    <div class="hwt-step-num">3</div>
-                    <div class="hwt-step-text">
-                        <strong>Import</strong>
-                        <span>Attach to products</span>
-                    </div>
-                </div>
-            </div>
-
             <!-- Tab navigation -->
             <div class="hwt-tabs">
-                <button class="hwt-tab active" data-tab="export">
+                <button class="hwt-tab active" data-tab="guide">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    How It Works
+                </button>
+                <button class="hwt-tab" data-tab="export">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     Export
                 </button>
@@ -158,9 +131,70 @@ class HWT_Admin {
             </div>
 
             <!-- ============================================================ -->
+            <!-- HOW IT WORKS TAB -->
+            <!-- ============================================================ -->
+            <div class="hwt-tab-content active" id="hwt-tab-guide">
+                <div class="hwt-card">
+                    <div class="hwt-guide-intro">
+                        <h2>Migrate Product Images in 3 Steps</h2>
+                        <p>This plugin helps you move WooCommerce product images from one site to another, matched by SKU. Install it on both sites and follow the steps below.</p>
+                    </div>
+
+                    <div class="hwt-guide-flow">
+                        <div class="hwt-guide-card">
+                            <div class="hwt-guide-num">1</div>
+                            <h3>Export</h3>
+                            <p>Generate a CSV file from the <strong>source site</strong> (the site that has the images). The CSV contains each product's SKU and its image URLs.</p>
+                            <span class="hwt-guide-where hwt-guide-where--source">Source site</span>
+                        </div>
+
+                        <div class="hwt-guide-arrow">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </div>
+
+                        <div class="hwt-guide-card">
+                            <div class="hwt-guide-num">2</div>
+                            <h3>Import</h3>
+                            <p>Upload the CSV on the <strong>target site</strong> (the new site). The plugin downloads each image and attaches it to the matching product by SKU.</p>
+                            <span class="hwt-guide-where hwt-guide-where--target">Target site</span>
+                        </div>
+
+                        <div class="hwt-guide-arrow">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </div>
+
+                        <div class="hwt-guide-card">
+                            <div class="hwt-guide-num">3</div>
+                            <h3>Verify</h3>
+                            <p>Use the <strong>Scan Missing</strong> tab to check which products still need images. Re-run the import if needed &mdash; duplicates are skipped automatically.</p>
+                            <span class="hwt-guide-where hwt-guide-where--either">Either site</span>
+                        </div>
+                    </div>
+
+                    <div class="hwt-guide-tips">
+                        <div class="hwt-guide-tips-card">
+                            <h3>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                                Tips
+                            </h3>
+                            <ul>
+                                <li>Products are matched by <strong>SKU</strong> &mdash; make sure SKUs are identical on both sites</li>
+                                <li>The source site must be online during import (images are downloaded from its URLs)</li>
+                                <li>Use the <strong>SKU filter</strong> on the Export or Import tab to process only specific products</li>
+                                <li>Toggle <strong>Overwrite existing</strong> on the Import tab to replace images that are already set</li>
+                                <li>You can <strong>pause and resume</strong> the import at any time &mdash; progress is saved</li>
+                                <li>Download the <strong>log file</strong> after import for a full record of what happened</li>
+                                <li>Use <strong>Diagnostics</strong> tab to troubleshoot any issues with your site configuration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
             <!-- EXPORT TAB -->
             <!-- ============================================================ -->
-            <div class="hwt-tab-content active" id="hwt-tab-export">
+            <div class="hwt-tab-content" id="hwt-tab-export">
                 <div class="hwt-card hwt-card--export">
                     <div class="hwt-card-header">
                         <div class="hwt-card-icon hwt-card-icon--export">
