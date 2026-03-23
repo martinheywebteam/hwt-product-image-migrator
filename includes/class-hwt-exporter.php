@@ -115,6 +115,41 @@ class HWT_Exporter {
                 ) );
 
                 $exported++;
+
+                // Export variation images for variable products.
+                if ( $product->is_type( 'variable' ) ) {
+                    $variation_ids = $product->get_children();
+                    foreach ( $variation_ids as $var_id ) {
+                        $variation = wc_get_product( $var_id );
+                        if ( ! $variation ) continue;
+
+                        $var_sku = $variation->get_sku();
+                        if ( empty( $var_sku ) ) continue;
+
+                        // Apply SKU filter to variations too.
+                        if ( ! empty( $sku_filter ) && ! in_array( strtolower( $var_sku ), $sku_filter, true ) ) {
+                            continue;
+                        }
+
+                        $var_thumb_url = '';
+                        $var_thumb_id  = get_post_thumbnail_id( $var_id );
+                        if ( $var_thumb_id ) {
+                            $var_thumb_url = wp_get_attachment_url( $var_thumb_id );
+                        }
+
+                        if ( empty( $var_thumb_url ) ) continue;
+
+                        fputcsv( $output, array(
+                            $var_sku,
+                            $var_id,
+                            $variation->get_name(),
+                            $var_thumb_url,
+                            '', // Variations don't have gallery images.
+                        ) );
+
+                        $exported++;
+                    }
+                }
             }
 
             $page++;

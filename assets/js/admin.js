@@ -144,6 +144,7 @@
         formData.append('skus', $('#hwt-import-skus').val());
         formData.append('overwrite', $('#hwt-overwrite').is(':checked') ? '1' : '0');
         formData.append('batch_size', $('#hwt-batch-size').val());
+        formData.append('dry_run', $('#hwt-dry-run').is(':checked') ? '1' : '0');
 
         $.ajax({
             url: hwtPIM.ajaxUrl,
@@ -371,6 +372,15 @@
         setTimeout(function () {
             $btn.find('.hwt-btn-text').text('Copy to Clipboard');
         }, 2000);
+    });
+
+    // =========================================================================
+    // History: Run selector
+    // =========================================================================
+    $('#hwt-run-select').on('change', function () {
+        var url = new URL(window.location.href);
+        url.searchParams.set('hwt_run', $(this).val());
+        window.location.href = url.toString();
     });
 
     // =========================================================================

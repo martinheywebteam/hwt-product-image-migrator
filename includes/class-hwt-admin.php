@@ -340,6 +340,16 @@ class HWT_Admin {
                                 <input type="number" id="hwt-batch-size" value="5" min="1" max="20" class="hwt-input-mini">
                                 <span class="hwt-tooltip" data-tip="Products processed per request. Lower = slower but safer for weak servers. Default 5 is good for most hosts.">?</span>
                             </div>
+                            <div class="hwt-option">
+                                <label class="hwt-toggle">
+                                    <input type="checkbox" id="hwt-dry-run">
+                                    <span class="hwt-toggle-slider"></span>
+                                </label>
+                                <div class="hwt-option-text">
+                                    <span>Dry run</span>
+                                    <span class="hwt-tooltip" data-tip="Simulate the import without downloading any images. Shows what would happen — which products would be imported, skipped, or fail.">?</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="hwt-card-footer">
@@ -485,27 +495,40 @@ class HWT_Admin {
             <!-- ============================================================ -->
             <div class="hwt-tab-content" id="hwt-tab-history">
                 <?php
-                $history = get_option( 'hwt_import_history', array() );
+                $all_runs = get_option( 'hwt_import_history_runs', array() );
 
-                // If no history saved yet, try to rebuild from existing imported attachments.
-                if ( empty( $history ) || empty( $history['products'] ) ) {
-                    $history = $this->rebuild_history_from_attachments();
+                // Backward compat: if no runs but old single history exists, use it.
+                if ( empty( $all_runs ) ) {
+                    $history = get_option( 'hwt_import_history', array() );
+                    if ( empty( $history ) || empty( $history['products'] ) ) {
+                        $history = $this->rebuild_history_from_attachments();
+                    }
+                    if ( ! empty( $history ) && ! empty( $history['products'] ) ) {
+                        $all_runs['legacy'] = $history;
+                    }
                 }
 
-                if ( empty( $history ) || empty( $history['products'] ) ) :
+                if ( empty( $all_runs ) ) :
                 ?>
                 <div class="hwt-card">
                     <div class="hwt-card-body" style="text-align:center; padding:48px 24px;">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="<?php echo 'var(--hwt-gray-400)'; ?>" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--hwt-gray-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         <h3 style="margin:16px 0 6px; color:#6c757d;">No Import History</h3>
                         <p style="margin:0; color:#adb5bd; font-size:13px;">Import results will appear here after you run your first import.</p>
                     </div>
                 </div>
                 <?php else :
+                    // Show run selector if multiple runs exist.
+                    $run_keys = array_keys( $all_runs );
+                    $selected_key = isset( $_GET['hwt_run'] ) ? sanitize_text_field( $_GET['hwt_run'] ) : end( $run_keys );
+                    if ( ! isset( $all_runs[ $selected_key ] ) ) $selected_key = end( $run_keys );
+
+                    $history  = $all_runs[ $selected_key ];
                     $stats    = $history['stats'];
                     $products = $history['products'];
                     $date     = $history['date'];
                     $total    = $history['total'];
+                    $is_dry   = ! empty( $history['dry_run'] );
 
                     $count_success = 0;
                     $count_skipped = 0;
@@ -515,15 +538,33 @@ class HWT_Admin {
                         elseif ( $p['status'] === 'skipped' ) $count_skipped++;
                         else $count_failed++;
                     }
+
+                    if ( count( $all_runs ) > 1 ) :
                 ?>
+                <div class="hwt-history-run-selector" style="margin-bottom:14px; display:flex; align-items:center; gap:10px;">
+                    <label style="font-size:13px; font-weight:600; color:#495057;">Import run:</label>
+                    <select id="hwt-run-select" style="padding:6px 12px; border:1px solid #dee2e6; border-radius:6px; font-size:13px;">
+                        <?php
+                        $run_index = count( $all_runs );
+                        foreach ( array_reverse( $all_runs, true ) as $key => $run ) :
+                            $run_label = '#' . $run_index . ' — ' . date_i18n( 'M j, Y g:i A', strtotime( $run['date'] ) );
+                            if ( ! empty( $run['dry_run'] ) ) $run_label .= ' (Dry Run)';
+                            $run_label .= ' (' . count( $run['products'] ) . ' products)';
+                        ?>
+                        <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $key, $selected_key ); ?>><?php echo esc_html( $run_label ); ?></option>
+                        <?php $run_index--; endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
                 <div class="hwt-card">
                     <div class="hwt-card-header">
                         <div class="hwt-card-icon hwt-card-icon--import">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </div>
                         <div>
-                            <h2>Last Import &mdash; <?php echo esc_html( date_i18n( 'F j, Y \a\t g:i A', strtotime( $date ) ) ); ?></h2>
-                            <p><?php echo intval( $total ); ?> products processed. <?php echo intval( $stats['imported'] ); ?> images imported.</p>
+                            <h2><?php echo $is_dry ? 'Dry Run' : 'Import'; ?> &mdash; <?php echo esc_html( date_i18n( 'F j, Y \a\t g:i A', strtotime( $date ) ) ); ?></h2>
+                            <p><?php echo intval( $total ); ?> products processed. <?php echo intval( $stats['imported'] ); ?> images <?php echo $is_dry ? 'would be imported' : 'imported'; ?>.<?php if ( $is_dry ) echo ' <strong style="color:#e67e22;">(Simulation — no images were downloaded)</strong>'; ?></p>
                         </div>
                     </div>
 
@@ -813,13 +854,15 @@ class HWT_Admin {
         $sku_filter  = array_filter( array_map( 'trim', explode( "\n", $skus ) ) );
         $overwrite   = ! empty( $_POST['overwrite'] );
         $batch_size  = isset( $_POST['batch_size'] ) ? intval( $_POST['batch_size'] ) : 5;
+        $dry_run     = ! empty( $_POST['dry_run'] );
 
         $result = $this->importer->setup_import(
             $_FILES['csv_file']['tmp_name'],
             $_FILES['csv_file']['name'],
             $sku_filter,
             $overwrite,
-            $batch_size
+            $batch_size,
+            $dry_run
         );
 
         if ( is_wp_error( $result ) ) {

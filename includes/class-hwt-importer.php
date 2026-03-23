@@ -99,7 +99,7 @@ class HWT_Importer {
     /**
      * Handle the CSV upload, validate it, and store job data in a transient.
      */
-    public function setup_import( $file_tmp, $file_name, $sku_filter = array(), $overwrite = false, $batch_size = 5 ) {
+    public function setup_import( $file_tmp, $file_name, $sku_filter = array(), $overwrite = false, $batch_size = 5, $dry_run = false ) {
         $ext = strtolower( pathinfo( $file_name, PATHINFO_EXTENSION ) );
         if ( 'csv' !== $ext ) {
             return new WP_Error( 'invalid_file', 'Please upload a valid CSV file.' );
@@ -165,12 +165,13 @@ class HWT_Importer {
             'sku_filter' => $sku_filter,
             'overwrite'  => $overwrite,
             'batch_size' => max( 1, min( 20, intval( $batch_size ) ) ),
+            'dry_run'    => $dry_run,
             'log_file'   => $log_file,
         );
 
         set_transient( 'hwt_import_job', $job, HOUR_IN_SECONDS );
 
-        $this->logger->info( "Import job started. Total rows: {$total}. Batch size: {$job['batch_size']}. Overwrite: " . ( $overwrite ? 'YES' : 'NO' ) );
+        $this->logger->info( "Import job started. Total rows: {$total}. Batch size: {$job['batch_size']}. Overwrite: " . ( $overwrite ? 'YES' : 'NO' ) . '. Dry run: ' . ( $dry_run ? 'YES' : 'NO' ) );
         $this->logger->info( "Blog ID: " . get_current_blog_id() . ". DB prefix: " . $GLOBALS['wpdb']->prefix );
         $upload_dir = wp_upload_dir();
         $this->logger->info( "Upload basedir: " . $upload_dir['basedir'] );
@@ -251,86 +252,130 @@ class HWT_Importer {
             $errors          = array();
             $featured_att_id = null;
             $new_gallery_ids = array();
+            $is_dry_run      = ! empty( $job['dry_run'] );
 
-            // --- Featured image ---
-            if ( ! empty( $featured_url ) ) {
-                if ( $product->get_image_id() && ! $job['overwrite'] ) {
-                    $images_skipped++;
-                    $this->logger->info( "SKU={$sku} | Featured image exists, skipping." );
-                } else {
-                    $att_id = $this->sideload_image( $featured_url, $product_id, $job['overwrite'] );
-                    if ( is_wp_error( $att_id ) ) {
-                        $errors[] = 'Featured: ' . $att_id->get_error_message();
-                        $this->logger->error( "SKU={$sku} | Featured failed: {$att_id->get_error_message()}" );
+            $gallery_urls = ! empty( $gallery_raw ) ? array_filter( array_map( 'trim', explode( '|', $gallery_raw ) ) ) : array();
+
+            if ( $is_dry_run ) {
+                // --- DRY RUN: simulate without downloading ---
+                $has_featured = (bool) $product->get_image_id();
+                $has_gallery  = ! empty( $product->get_gallery_image_ids() );
+
+                $would_import_featured = 0;
+                $would_skip_featured   = 0;
+                $would_import_gallery  = 0;
+                $would_skip_gallery    = 0;
+
+                if ( ! empty( $featured_url ) ) {
+                    if ( $has_featured && ! $job['overwrite'] ) {
+                        $would_skip_featured = 1;
                     } else {
-                        $featured_att_id = $att_id;
-                        $images_imported++;
-                        $this->logger->info( "SKU={$sku} | Featured image imported (ID {$att_id})." );
+                        $would_import_featured = 1;
                     }
                 }
-            }
 
-            // --- Gallery images ---
-            if ( ! empty( $gallery_raw ) ) {
-                $gallery_urls = array_filter( array_map( 'trim', explode( '|', $gallery_raw ) ) );
-                $existing_ids = $product->get_gallery_image_ids();
+                if ( ! empty( $gallery_urls ) ) {
+                    if ( $has_gallery && ! $job['overwrite'] ) {
+                        $would_skip_gallery = count( $gallery_urls );
+                    } else {
+                        $would_import_gallery = count( $gallery_urls );
+                    }
+                }
 
-                if ( ! empty( $existing_ids ) && ! $job['overwrite'] ) {
-                    $images_skipped += count( $gallery_urls );
-                    $new_gallery_ids = $existing_ids;
-                    $this->logger->info( "SKU={$sku} | Gallery exists (" . count( $existing_ids ) . "), skipping." );
-                } else {
-                    $new_gallery_ids = $job['overwrite'] ? array() : $existing_ids;
+                $images_imported = $would_import_featured + $would_import_gallery;
+                $images_skipped  = $would_skip_featured + $would_skip_gallery;
 
-                    foreach ( $gallery_urls as $i => $g_url ) {
-                        $att_id = $this->sideload_image( $g_url, $product_id, $job['overwrite'] );
+                $status = 'success';
+                if ( $images_imported === 0 && $images_skipped > 0 ) {
+                    $status = 'skipped';
+                }
+
+                $msg = "DRY RUN: {$images_imported} would import, {$images_skipped} would skip";
+                if ( $has_featured ) $msg .= ' (has featured)';
+                if ( $has_gallery )  $msg .= ' (has gallery)';
+
+                $this->logger->info( "SKU={$sku} | {$msg}" );
+
+            } else {
+                // --- REAL IMPORT ---
+                // Featured image.
+                if ( ! empty( $featured_url ) ) {
+                    if ( $product->get_image_id() && ! $job['overwrite'] ) {
+                        $images_skipped++;
+                        $this->logger->info( "SKU={$sku} | Featured image exists, skipping." );
+                    } else {
+                        $att_id = $this->sideload_image( $featured_url, $product_id, $job['overwrite'] );
                         if ( is_wp_error( $att_id ) ) {
-                            $errors[] = 'Gallery ' . ( $i + 1 ) . ': ' . $att_id->get_error_message();
-                            $this->logger->error( "SKU={$sku} | Gallery " . ( $i + 1 ) . " failed: {$att_id->get_error_message()}" );
+                            $errors[] = 'Featured: ' . $att_id->get_error_message();
+                            $this->logger->error( "SKU={$sku} | Featured failed: {$att_id->get_error_message()}" );
                         } else {
-                            $new_gallery_ids[] = $att_id;
+                            $featured_att_id = $att_id;
                             $images_imported++;
-                            $this->logger->info( "SKU={$sku} | Gallery " . ( $i + 1 ) . " imported (ID {$att_id})." );
+                            $this->logger->info( "SKU={$sku} | Featured image imported (ID {$att_id})." );
                         }
                     }
                 }
-            }
 
-            // --- Save to product via WooCommerce API (HPOS-compatible) ---
-            $changed = false;
-            if ( $featured_att_id !== null ) {
-                $product->set_image_id( $featured_att_id );
-                $this->logger->info( "SKU={$sku} | set_image_id({$featured_att_id})" );
-                $changed = true;
-            }
-            if ( ! empty( $new_gallery_ids ) ) {
-                $product->set_gallery_image_ids( $new_gallery_ids );
-                $this->logger->info( "SKU={$sku} | set_gallery_image_ids(" . implode( ',', $new_gallery_ids ) . ")" );
-                $changed = true;
-            }
-            if ( $changed ) {
-                $product->save();
+                // Gallery images.
+                if ( ! empty( $gallery_urls ) ) {
+                    $existing_ids = $product->get_gallery_image_ids();
 
-                // Verify it stuck.
-                $verify_product = wc_get_product( $product_id );
-                $verify_img     = $verify_product ? $verify_product->get_image_id() : 'N/A';
-                $verify_gallery = $verify_product ? $verify_product->get_gallery_image_ids() : array();
-                $this->logger->info( "SKU={$sku} | VERIFY after save: image_id={$verify_img}, gallery=" . implode( ',', $verify_gallery ) );
+                    if ( ! empty( $existing_ids ) && ! $job['overwrite'] ) {
+                        $images_skipped += count( $gallery_urls );
+                        $new_gallery_ids = $existing_ids;
+                        $this->logger->info( "SKU={$sku} | Gallery exists (" . count( $existing_ids ) . "), skipping." );
+                    } else {
+                        $new_gallery_ids = $job['overwrite'] ? array() : $existing_ids;
+
+                        foreach ( $gallery_urls as $i => $g_url ) {
+                            $att_id = $this->sideload_image( $g_url, $product_id, $job['overwrite'] );
+                            if ( is_wp_error( $att_id ) ) {
+                                $errors[] = 'Gallery ' . ( $i + 1 ) . ': ' . $att_id->get_error_message();
+                                $this->logger->error( "SKU={$sku} | Gallery " . ( $i + 1 ) . " failed: {$att_id->get_error_message()}" );
+                            } else {
+                                $new_gallery_ids[] = $att_id;
+                                $images_imported++;
+                                $this->logger->info( "SKU={$sku} | Gallery " . ( $i + 1 ) . " imported (ID {$att_id})." );
+                            }
+                        }
+                    }
+                }
+
+                // Save to product via WooCommerce API.
+                $changed = false;
+                if ( $featured_att_id !== null ) {
+                    $product->set_image_id( $featured_att_id );
+                    $changed = true;
+                }
+                if ( ! empty( $new_gallery_ids ) ) {
+                    $product->set_gallery_image_ids( $new_gallery_ids );
+                    $changed = true;
+                }
+                if ( $changed ) {
+                    $product->save();
+                    $this->logger->info( "SKU={$sku} | Product saved." );
+                }
             }
 
             // Build result.
-            $status = 'success';
-            if ( ! empty( $errors ) && 0 === $images_imported ) {
-                $status = 'error';
-            } elseif ( ! empty( $errors ) ) {
-                $status = 'partial';
-            } elseif ( $images_imported === 0 && $images_skipped > 0 ) {
-                $status = 'skipped';
+            $status = isset( $status ) ? $status : 'success';
+            if ( ! $is_dry_run ) {
+                if ( ! empty( $errors ) && 0 === $images_imported ) {
+                    $status = 'error';
+                } elseif ( ! empty( $errors ) ) {
+                    $status = 'partial';
+                } elseif ( $images_imported === 0 && $images_skipped > 0 ) {
+                    $status = 'skipped';
+                } else {
+                    $status = 'success';
+                }
             }
 
-            $msg = "{$images_imported} imported";
-            if ( $images_skipped > 0 ) $msg .= ", {$images_skipped} skipped";
-            if ( ! empty( $errors ) )  $msg .= ', errors: ' . implode( '; ', $errors );
+            if ( ! $is_dry_run ) {
+                $msg = "{$images_imported} imported";
+                if ( $images_skipped > 0 ) $msg .= ", {$images_skipped} skipped";
+                if ( ! empty( $errors ) )  $msg .= ', errors: ' . implode( '; ', $errors );
+            }
 
             $results[] = array(
                 'sku'             => $sku,
@@ -340,6 +385,7 @@ class HWT_Importer {
                 'images_imported' => $images_imported,
                 'images_skipped'  => $images_skipped,
                 'message'         => $msg,
+                'dry_run'         => $is_dry_run,
             );
         }
 
@@ -349,33 +395,43 @@ class HWT_Importer {
         $new_offset = $offset + $processed;
         $done       = $new_offset >= $job['total'];
 
-        // Accumulate results in the import history option.
-        $history = get_option( 'hwt_import_history', array() );
-        if ( empty( $history ) || $offset === 0 ) {
-            // First batch — start fresh history.
-            $history = array(
+        // Accumulate results in the current import run.
+        $all_runs    = get_option( 'hwt_import_history_runs', array() );
+        $current_key = 'run_' . md5( $job['csv_path'] . $job['log_file'] );
+
+        if ( ! isset( $all_runs[ $current_key ] ) || $offset === 0 ) {
+            $all_runs[ $current_key ] = array(
                 'date'      => current_time( 'mysql' ),
                 'total'     => $job['total'],
                 'overwrite' => $job['overwrite'],
+                'dry_run'   => ! empty( $job['dry_run'] ),
                 'products'  => array(),
                 'stats'     => array( 'imported' => 0, 'skipped' => 0, 'failed' => 0 ),
             );
         }
 
         foreach ( $results as $r ) {
-            $history['products'][] = $r;
+            $all_runs[ $current_key ]['products'][] = $r;
             if ( $r['status'] === 'success' || $r['status'] === 'partial' ) {
-                $history['stats']['imported'] += ( isset( $r['images_imported'] ) ? $r['images_imported'] : 0 );
-                $history['stats']['skipped']  += ( isset( $r['images_skipped'] ) ? $r['images_skipped'] : 0 );
-                if ( $r['status'] === 'partial' ) $history['stats']['failed']++;
+                $all_runs[ $current_key ]['stats']['imported'] += ( isset( $r['images_imported'] ) ? $r['images_imported'] : 0 );
+                $all_runs[ $current_key ]['stats']['skipped']  += ( isset( $r['images_skipped'] ) ? $r['images_skipped'] : 0 );
+                if ( $r['status'] === 'partial' ) $all_runs[ $current_key ]['stats']['failed']++;
             } elseif ( $r['status'] === 'error' ) {
-                $history['stats']['failed']++;
+                $all_runs[ $current_key ]['stats']['failed']++;
             } elseif ( $r['status'] === 'skipped' ) {
-                $history['stats']['skipped']++;
+                $all_runs[ $current_key ]['stats']['skipped']++;
             }
         }
 
-        update_option( 'hwt_import_history', $history, false );
+        // Keep last 10 runs maximum.
+        if ( count( $all_runs ) > 10 ) {
+            $all_runs = array_slice( $all_runs, -10, 10, true );
+        }
+
+        update_option( 'hwt_import_history_runs', $all_runs, false );
+
+        // Also keep backward-compatible single history for the latest run.
+        update_option( 'hwt_import_history', $all_runs[ $current_key ], false );
 
         if ( $done ) {
             $this->logger->info( 'Import complete.' );
