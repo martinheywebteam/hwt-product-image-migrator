@@ -26,23 +26,30 @@ The plugin includes a built-in **How It Works** tab that walks you through the p
 - **CSV Export/Import** — No API keys needed, fully file-based
 - **SKU Matching** — Products are matched by their WooCommerce SKU field
 - **Featured + Gallery Images** — Imports both the main product image and all gallery images
+- **Variation Image Support** — Exports and imports variation-specific images (each variation with its own SKU and image)
 - **Batch Processing** — AJAX-based, processes 5 products per batch to avoid timeouts
 - **Pause/Resume** — Pause the import anytime, resume where you left off
 - **Duplicate Prevention** — Won't re-download images that have already been imported
 - **Overwrite Mode** — Optional toggle to replace existing images
+- **Dry Run Mode** — Simulate an import without downloading any images to preview what would happen
 - **SKU Filtering** — Export/import only specific SKUs (paste from a spreadsheet)
 
 ### Scan & Verify
 - **Scan Missing** — Detect which products are missing featured images, gallery images, or both
+- **Detail Badges** — Each scanned SKU shows exactly what's missing (red `no featured`, yellow `no gallery`)
+- **Gallery-only Info Note** — Automatic note explaining that "no gallery" may be normal if the source product doesn't have gallery images
 - **Use in Import** — One-click transfer of scanned SKUs to the Import tab's filter
 - **Copy to Clipboard** — Copy scanned SKU lists for use elsewhere
 
 ### Import History
-- **Persistent History** — Last import results are saved and viewable anytime
+- **Cumulative History** — Keeps the last 10 import runs (not just the latest)
+- **Run Selector** — Dropdown to switch between previous import runs
+- **Product Thumbnails** — Visual preview of each product's featured image in the history table
 - **Product Table** — Full list of imported products with SKU, name, status, and image count
 - **Edit Links** — Click to open any product directly in the WooCommerce editor
 - **Search** — Instant search by SKU or product name (accent-insensitive — `Hermes` finds `Hermès`)
 - **Status Filters** — Filter by All / Success / Skipped / Failed with count badges
+- **Dry Run Labels** — Clearly marks simulation runs vs real imports
 - **Auto-rebuild** — If you installed the plugin after an import, history is rebuilt from existing data
 
 ### Diagnostics & Cleanup
@@ -59,7 +66,7 @@ The plugin includes a built-in **How It Works** tab that walks you through the p
 ### UI/UX
 - **How It Works Tab** — Visual 3-step guide with tips for new users
 - **Modern Design** — Card-based layout, smooth tab transitions, animated progress bar
-- **Tooltips** — Context-sensitive help on every option, positioned to stay within viewport
+- **Tooltips** — Context-sensitive help on every option, JS-positioned to stay within viewport
 - **Responsive** — Works on smaller screens and mobile admin
 - **Full-width Centered Layout** — Makes use of available screen space
 - **In-page Modal** — Cleanup confirmation without browser popups
