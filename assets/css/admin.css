@@ -957,138 +957,45 @@ h2.hwt-title {
     text-align: center;
     padding: 24px 20px 8px;
 }
-
 .hwt-guide-intro h2 {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--hwt-gray-900);
-    margin: 0 0 6px;
+    font-size: 20px; font-weight: 700; color: var(--hwt-gray-900); margin: 0 0 6px;
 }
-
 .hwt-guide-intro p {
-    font-size: 14px;
-    color: var(--hwt-gray-600);
-    margin: 0;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
+    font-size: 14px; color: var(--hwt-gray-600); margin: 0 auto; max-width: 600px; line-height: 1.6;
 }
-
 .hwt-guide-flow {
-    display: flex;
-    gap: 16px;
-    padding: 24px;
-    align-items: stretch;
+    display: flex; gap: 16px; padding: 24px; align-items: stretch;
 }
-
 .hwt-guide-card {
-    flex: 1;
-    background: #fff;
-    border: 1px solid var(--hwt-gray-200);
-    border-radius: var(--hwt-radius);
-    padding: 24px 20px;
-    text-align: center;
-    position: relative;
-    transition: border-color var(--hwt-transition), box-shadow var(--hwt-transition);
+    flex: 1; background: #fff; border: 1px solid var(--hwt-gray-200); border-radius: var(--hwt-radius);
+    padding: 24px 20px; text-align: center; transition: border-color var(--hwt-transition), box-shadow var(--hwt-transition);
 }
-
-.hwt-guide-card:hover {
-    border-color: var(--hwt-brand);
-    box-shadow: var(--hwt-shadow-md);
-}
-
+.hwt-guide-card:hover { border-color: var(--hwt-brand); box-shadow: var(--hwt-shadow-md); }
 .hwt-guide-num {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--hwt-brand);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 14px;
+    width: 36px; height: 36px; border-radius: 50%; background: var(--hwt-brand); color: #fff;
+    font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
 }
-
-.hwt-guide-card h3 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--hwt-gray-900);
-    margin: 0 0 6px;
+.hwt-guide-card h3 { font-size: 15px; font-weight: 700; color: var(--hwt-gray-900); margin: 0 0 6px; }
+.hwt-guide-card p { font-size: 13px; color: var(--hwt-gray-600); margin: 0 0 14px; line-height: 1.5; }
+.hwt-guide-where {
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 4px 10px; border-radius: 20px; display: inline-block;
 }
-
-.hwt-guide-card p {
-    font-size: 13px;
-    color: var(--hwt-gray-600);
-    margin: 0 0 14px;
-    line-height: 1.5;
-}
-
-.hwt-guide-card .hwt-guide-where {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    display: inline-block;
-}
-
-.hwt-guide-where--source {
-    background: var(--hwt-export-bg);
-    color: var(--hwt-export);
-}
-
-.hwt-guide-where--target {
-    background: var(--hwt-import-bg);
-    color: var(--hwt-import);
-}
-
-.hwt-guide-where--either {
-    background: var(--hwt-scan-bg);
-    color: var(--hwt-scan);
-}
-
-.hwt-guide-arrow {
-    display: flex;
-    align-items: center;
-    color: var(--hwt-gray-400);
-    flex-shrink: 0;
-}
-
-.hwt-guide-tips {
-    padding: 0 24px 24px;
-}
-
+.hwt-guide-where--source { background: var(--hwt-export-bg); color: var(--hwt-export); }
+.hwt-guide-where--target { background: var(--hwt-import-bg); color: var(--hwt-import); }
+.hwt-guide-where--either { background: var(--hwt-scan-bg); color: var(--hwt-scan); }
+.hwt-guide-arrow { display: flex; align-items: center; color: var(--hwt-gray-400); flex-shrink: 0; }
+.hwt-guide-tips { padding: 0 24px 24px; }
 .hwt-guide-tips-card {
-    background: var(--hwt-brand-subtle);
-    border: 1px solid var(--hwt-gray-200);
-    border-radius: var(--hwt-radius);
-    padding: 20px 24px;
+    background: var(--hwt-brand-subtle); border: 1px solid var(--hwt-gray-200);
+    border-radius: var(--hwt-radius); padding: 20px 24px;
 }
-
 .hwt-guide-tips-card h3 {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--hwt-brand);
-    margin: 0 0 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 14px; font-weight: 700; color: var(--hwt-brand); margin: 0 0 10px;
+    display: flex; align-items: center; gap: 8px;
 }
-
 .hwt-guide-tips-card ul {
-    margin: 0;
-    padding: 0 0 0 18px;
-    font-size: 13px;
-    color: var(--hwt-gray-700);
-    line-height: 1.8;
-}
-
-.hwt-guide-tips-card li + li {
-    margin-top: 2px;
+    margin: 0; padding: 0 0 0 18px; font-size: 13px; color: var(--hwt-gray-700); line-height: 1.8;
 }
 
 /* ============================================================
@@ -1098,6 +1005,8 @@ h2.hwt-title {
     .hwt-wrap { margin: 10px 0; }
     .hwt-guide-flow { flex-direction: column; }
     .hwt-guide-arrow { transform: rotate(90deg); justify-content: center; }
+    .hwt-steps { flex-direction: column; gap: 4px; }
+    .hwt-step-arrow { transform: rotate(90deg); }
     .hwt-radio-cards { flex-direction: column; }
     .hwt-stats { flex-direction: column; }
     .hwt-options-row { flex-direction: column; gap: 12px; }

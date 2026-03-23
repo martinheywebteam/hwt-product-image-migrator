@@ -106,6 +106,37 @@ class HWT_Admin {
                 </div>
             </div>
 
+            <!-- How it works - step indicator -->
+            <div class="hwt-steps">
+                <div class="hwt-step" data-tab="scan">
+                    <div class="hwt-step-num">1</div>
+                    <div class="hwt-step-text">
+                        <strong>Scan</strong>
+                        <span>Find missing images</span>
+                    </div>
+                </div>
+                <div class="hwt-step-arrow">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="hwt-step" data-tab="export">
+                    <div class="hwt-step-num">2</div>
+                    <div class="hwt-step-text">
+                        <strong>Export</strong>
+                        <span>Download image CSV</span>
+                    </div>
+                </div>
+                <div class="hwt-step-arrow">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="hwt-step" data-tab="import">
+                    <div class="hwt-step-num">3</div>
+                    <div class="hwt-step-text">
+                        <strong>Import</strong>
+                        <span>Attach to products</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab navigation -->
             <div class="hwt-tabs">
                 <button class="hwt-tab active" data-tab="guide">
@@ -139,7 +170,6 @@ class HWT_Admin {
                         <h2>Migrate Product Images in 3 Steps</h2>
                         <p>This plugin helps you move WooCommerce product images from one site to another, matched by SKU. Install it on both sites and follow the steps below.</p>
                     </div>
-
                     <div class="hwt-guide-flow">
                         <div class="hwt-guide-card">
                             <div class="hwt-guide-num">1</div>
@@ -147,22 +177,18 @@ class HWT_Admin {
                             <p>Generate a CSV file from the <strong>source site</strong> (the site that has the images). The CSV contains each product's SKU and its image URLs.</p>
                             <span class="hwt-guide-where hwt-guide-where--source">Source site</span>
                         </div>
-
                         <div class="hwt-guide-arrow">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </div>
-
                         <div class="hwt-guide-card">
                             <div class="hwt-guide-num">2</div>
                             <h3>Import</h3>
                             <p>Upload the CSV on the <strong>target site</strong> (the new site). The plugin downloads each image and attaches it to the matching product by SKU.</p>
                             <span class="hwt-guide-where hwt-guide-where--target">Target site</span>
                         </div>
-
                         <div class="hwt-guide-arrow">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </div>
-
                         <div class="hwt-guide-card">
                             <div class="hwt-guide-num">3</div>
                             <h3>Verify</h3>
@@ -170,7 +196,6 @@ class HWT_Admin {
                             <span class="hwt-guide-where hwt-guide-where--either">Either site</span>
                         </div>
                     </div>
-
                     <div class="hwt-guide-tips">
                         <div class="hwt-guide-tips-card">
                             <h3>
@@ -182,9 +207,9 @@ class HWT_Admin {
                                 <li>The source site must be online during import (images are downloaded from its URLs)</li>
                                 <li>Use the <strong>SKU filter</strong> on the Export or Import tab to process only specific products</li>
                                 <li>Toggle <strong>Overwrite existing</strong> on the Import tab to replace images that are already set</li>
-                                <li>You can <strong>pause and resume</strong> the import at any time &mdash; progress is saved</li>
+                                <li>You can <strong>pause and resume</strong> the import at any time</li>
                                 <li>Download the <strong>log file</strong> after import for a full record of what happened</li>
-                                <li>Use <strong>Diagnostics</strong> tab to troubleshoot any issues with your site configuration</li>
+                                <li>Use the <strong>Diagnostics</strong> tab to troubleshoot site configuration issues</li>
                             </ul>
                         </div>
                     </div>
@@ -740,15 +765,10 @@ class HWT_Admin {
         // WooCommerce.
         $diag[] = '--- WooCommerce ---';
         $diag[] = 'WC version: ' . ( defined( 'WC_VERSION' ) ? WC_VERSION : 'N/A' );
-        try {
-            if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' ) && function_exists( 'wc_get_container' ) ) {
-                $controller = wc_get_container()->get( 'Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController' );
-                $diag[] = 'HPOS enabled: ' . ( $controller->custom_orders_table_usage_is_enabled() ? 'YES' : 'NO' );
-            } else {
-                $diag[] = 'HPOS: N/A';
-            }
-        } catch ( \Exception $e ) {
-            $diag[] = 'HPOS: Could not detect (' . $e->getMessage() . ')';
+        if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' ) ) {
+            $diag[] = 'HPOS enabled: ' . ( wc_get_container()->get( \Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled() ? 'YES' : 'NO' );
+        } else {
+            $diag[] = 'HPOS: N/A (older WC version)';
         }
         $diag[] = '';
 
