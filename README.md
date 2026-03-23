@@ -18,8 +18,11 @@ Source Site (live)                    Target Site (staging/new)
                                        → Done
 ```
 
+The plugin includes a built-in **How It Works** tab that walks you through the process step by step.
+
 ## Features
 
+### Core
 - **CSV Export/Import** — No API keys needed, fully file-based
 - **SKU Matching** — Products are matched by their WooCommerce SKU field
 - **Featured + Gallery Images** — Imports both the main product image and all gallery images
@@ -27,13 +30,39 @@ Source Site (live)                    Target Site (staging/new)
 - **Pause/Resume** — Pause the import anytime, resume where you left off
 - **Duplicate Prevention** — Won't re-download images that have already been imported
 - **Overwrite Mode** — Optional toggle to replace existing images
-- **Scan Missing** — Detect which products on the target site are missing images
 - **SKU Filtering** — Export/import only specific SKUs (paste from a spreadsheet)
-- **Diagnostics** — Built-in diagnostic tool to inspect site configuration
-- **Cleanup** — One-click removal of all imported attachments if needed
-- **Multisite Support** — Auto-detects upload directory configuration on WordPress multisite
-- **HPOS Compatible** — Uses WooCommerce's product API, works with High-Performance Order Storage
-- **Detailed Logging** — Downloadable log file after every import
+
+### Scan & Verify
+- **Scan Missing** — Detect which products are missing featured images, gallery images, or both
+- **Use in Import** — One-click transfer of scanned SKUs to the Import tab's filter
+- **Copy to Clipboard** — Copy scanned SKU lists for use elsewhere
+
+### Import History
+- **Persistent History** — Last import results are saved and viewable anytime
+- **Product Table** — Full list of imported products with SKU, name, status, and image count
+- **Edit Links** — Click to open any product directly in the WooCommerce editor
+- **Search** — Instant search by SKU or product name (accent-insensitive — `Hermes` finds `Hermès`)
+- **Status Filters** — Filter by All / Success / Skipped / Failed with count badges
+- **Auto-rebuild** — If you installed the plugin after an import, history is rebuilt from existing data
+
+### Diagnostics & Cleanup
+- **Site Diagnostics** — Inspect WordPress version, upload paths, database prefixes, HPOS status, PHP config
+- **Copy to Clipboard** — Share diagnostics output for support
+- **Cleanup Tool** — One-click removal of all imported attachments with confirmation modal
+- **Side-by-side Layout** — Diagnostics and cleanup displayed as separate cards
+
+### Compatibility
+- **Multisite Support** — Auto-detects upload directory configuration (single site, subdirectory multisite, custom upload paths)
+- **HPOS Compatible** — Uses WooCommerce's product API (`set_image_id`, `set_gallery_image_ids`, `save`), works with High-Performance Order Storage
+- **Detailed Logging** — Downloadable log file after every import with per-image details
+
+### UI/UX
+- **How It Works Tab** — Visual 3-step guide with tips for new users
+- **Modern Design** — Card-based layout, smooth tab transitions, animated progress bar
+- **Tooltips** — Context-sensitive help on every option, positioned to stay within viewport
+- **Responsive** — Works on smaller screens and mobile admin
+- **Full-width Centered Layout** — Makes use of available screen space
+- **In-page Modal** — Cleanup confirmation without browser popups
 
 ## Requirements
 
@@ -48,6 +77,17 @@ Source Site (live)                    Target Site (staging/new)
 2. Go to **Plugins → Add New → Upload Plugin**
 3. Upload the ZIP and activate
 4. Find it under **WooCommerce → Image Migrator**
+
+## Tabs Overview
+
+| Tab | Purpose |
+|---|---|
+| **How It Works** | Visual guide explaining the 3-step workflow with tips |
+| **Export** | Generate a CSV of product SKUs and image URLs from the source site |
+| **Import** | Upload a CSV and download images to the target site, matched by SKU |
+| **Scan Missing** | Detect products missing featured or gallery images |
+| **Import History** | View results from the last import with search, filters, and edit links |
+| **Diagnostics** | Inspect site config and clean up imported attachments |
 
 ## Usage
 
@@ -64,13 +104,23 @@ Source Site (live)                    Target Site (staging/new)
 3. Optionally paste SKUs to limit the import
 4. Toggle **Overwrite existing** if you want to replace current images
 5. Click **Start Import**
+6. Monitor progress in real-time — pause/resume as needed
+7. Download the log file when complete
 
 ### Scanning for Missing Images
 
 1. Go to **WooCommerce → Image Migrator → Scan Missing**
 2. Choose what to scan for (missing featured, gallery, or any)
 3. Click **Scan Products**
-4. Click **Use in Import Tab** to auto-fill the SKU filter
+4. Click **Use in Import Tab** to auto-fill the SKU filter, or **Copy to Clipboard**
+
+### Reviewing Import History
+
+1. Go to **WooCommerce → Image Migrator → Import History**
+2. View stats: products updated, skipped, and failed
+3. Search by SKU or product name (accent-insensitive)
+4. Filter by status (All / Success / Skipped / Failed)
+5. Click **Edit** to open any product in the WooCommerce editor
 
 ## CSV Format
 
@@ -90,6 +140,7 @@ The exported CSV contains these columns:
 - Log files are protected with `.htaccess` deny rules
 - CSV uploads are validated for extension, size (max 10MB), and required columns
 - No external API calls — images are downloaded directly from the source URLs
+- Cleanup requires explicit confirmation via in-page modal
 
 ## License
 
