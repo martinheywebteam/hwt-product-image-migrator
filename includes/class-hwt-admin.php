@@ -486,6 +486,12 @@ class HWT_Admin {
             <div class="hwt-tab-content" id="hwt-tab-history">
                 <?php
                 $history = get_option( 'hwt_import_history', array() );
+
+                // If no history saved yet, try to rebuild from existing imported attachments.
+                if ( empty( $history ) || empty( $history['products'] ) ) {
+                    $history = $this->rebuild_history_from_attachments();
+                }
+
                 if ( empty( $history ) || empty( $history['products'] ) ) :
                 ?>
                 <div class="hwt-card">
@@ -629,6 +635,85 @@ class HWT_Admin {
             </div>
         </div>
         <?php
+    }
+
+    /**
+     * Rebuild import history from existing attachments with _hwt_source_url meta.
+     * Used when the plugin was updated after an import was already done.
+     */
+    private function rebuild_history_from_attachments() {
+        global $wpdb;
+
+        // Find all products that have attachments with _hwt_source_url.
+        $rows = $wpdb->get_results(
+            "SELECT DISTINCT p.post_parent AS product_id
+             FROM {$wpdb->posts} p
+             INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+             WHERE p.post_type = 'attachment'
+               AND pm.meta_key = '_hwt_source_url'
+               AND p.post_parent > 0
+             ORDER BY p.post_parent ASC"
+        );
+
+        if ( empty( $rows ) ) {
+            return array();
+        }
+
+        $products  = array();
+        $total_img = 0;
+
+        foreach ( $rows as $row ) {
+            $product = wc_get_product( intval( $row->product_id ) );
+            if ( ! $product ) {
+                continue;
+            }
+
+            // Count imported attachments for this product.
+            $img_count = intval( $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$wpdb->posts} p
+                     INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                     WHERE p.post_type = 'attachment'
+                       AND p.post_parent = %d
+                       AND pm.meta_key = '_hwt_source_url'",
+                    $row->product_id
+                )
+            ) );
+
+            $total_img += $img_count;
+
+            $products[] = array(
+                'sku'             => $product->get_sku(),
+                'product_id'      => intval( $row->product_id ),
+                'product_title'   => $product->get_name(),
+                'status'          => 'success',
+                'images_imported' => $img_count,
+                'images_skipped'  => 0,
+                'message'         => $img_count . ' imported',
+            );
+        }
+
+        if ( empty( $products ) ) {
+            return array();
+        }
+
+        $history = array(
+            'date'      => current_time( 'mysql' ),
+            'total'     => count( $products ),
+            'overwrite' => false,
+            'products'  => $products,
+            'stats'     => array(
+                'imported' => $total_img,
+                'skipped'  => 0,
+                'failed'   => 0,
+            ),
+            'rebuilt'    => true,
+        );
+
+        // Save it so we don't rebuild every time.
+        update_option( 'hwt_import_history', $history, false );
+
+        return $history;
     }
 
     /**
