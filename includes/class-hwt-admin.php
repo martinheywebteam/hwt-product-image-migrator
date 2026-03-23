@@ -155,6 +155,10 @@ class HWT_Admin {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     Scan Missing
                 </button>
+                <button class="hwt-tab" data-tab="history">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Import History
+                </button>
                 <button class="hwt-tab" data-tab="diagnostics">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
                     Diagnostics
@@ -474,6 +478,97 @@ class HWT_Admin {
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- IMPORT HISTORY TAB -->
+            <!-- ============================================================ -->
+            <div class="hwt-tab-content" id="hwt-tab-history">
+                <?php
+                $history = get_option( 'hwt_import_history', array() );
+                if ( empty( $history ) || empty( $history['products'] ) ) :
+                ?>
+                <div class="hwt-card">
+                    <div class="hwt-card-body" style="text-align:center; padding:48px 24px;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="<?php echo 'var(--hwt-gray-400)'; ?>" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <h3 style="margin:16px 0 6px; color:#6c757d;">No Import History</h3>
+                        <p style="margin:0; color:#adb5bd; font-size:13px;">Import results will appear here after you run your first import.</p>
+                    </div>
+                </div>
+                <?php else :
+                    $stats    = $history['stats'];
+                    $products = $history['products'];
+                    $date     = $history['date'];
+                    $total    = $history['total'];
+
+                    $count_success = 0;
+                    $count_skipped = 0;
+                    $count_failed  = 0;
+                    foreach ( $products as $p ) {
+                        if ( $p['status'] === 'success' ) $count_success++;
+                        elseif ( $p['status'] === 'skipped' ) $count_skipped++;
+                        else $count_failed++;
+                    }
+                ?>
+                <div class="hwt-card">
+                    <div class="hwt-card-header">
+                        <div class="hwt-card-icon hwt-card-icon--import">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <div>
+                            <h2>Last Import &mdash; <?php echo esc_html( date_i18n( 'F j, Y \a\t g:i A', strtotime( $date ) ) ); ?></h2>
+                            <p><?php echo intval( $total ); ?> products processed. <?php echo intval( $stats['imported'] ); ?> images imported.</p>
+                        </div>
+                    </div>
+
+                    <div class="hwt-card-body">
+                        <!-- Stats -->
+                        <div class="hwt-stats" style="margin-bottom:20px;">
+                            <div class="hwt-stat-card hwt-stat-card--success">
+                                <div class="hwt-stat-num"><?php echo intval( $count_success ); ?></div>
+                                <div class="hwt-stat-label">Products Updated</div>
+                            </div>
+                            <div class="hwt-stat-card hwt-stat-card--skip">
+                                <div class="hwt-stat-num"><?php echo intval( $count_skipped ); ?></div>
+                                <div class="hwt-stat-label">Skipped</div>
+                            </div>
+                            <div class="hwt-stat-card hwt-stat-card--error">
+                                <div class="hwt-stat-num"><?php echo intval( $count_failed ); ?></div>
+                                <div class="hwt-stat-label">Failed</div>
+                            </div>
+                        </div>
+
+                        <!-- Product list -->
+                        <div class="hwt-history-list">
+                            <table class="hwt-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>SKU</th>
+                                        <th>Product</th>
+                                        <th>Details</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ( $products as $p ) :
+                                        $edit_url = admin_url( 'post.php?post=' . intval( $p['product_id'] ) . '&action=edit' );
+                                        $badge_class = 'hwt-log-badge-' . $p['status'];
+                                    ?>
+                                    <tr>
+                                        <td><span class="hwt-log-badge <?php echo esc_attr( $badge_class ); ?>"><?php echo esc_html( $p['status'] ); ?></span></td>
+                                        <td><strong><?php echo esc_html( $p['sku'] ); ?></strong></td>
+                                        <td><?php echo esc_html( isset( $p['product_title'] ) ? $p['product_title'] : '—' ); ?></td>
+                                        <td style="font-size:12px; color:#6c757d;"><?php echo esc_html( $p['message'] ); ?></td>
+                                        <td><a href="<?php echo esc_url( $edit_url ); ?>" class="hwt-btn hwt-btn-secondary hwt-btn-sm" target="_blank">Edit</a></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- ============================================================ -->

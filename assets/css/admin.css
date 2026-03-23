@@ -951,6 +951,55 @@ h2.hwt-title {
 }
 
 /* ============================================================
+   HISTORY TABLE
+   ============================================================ */
+.hwt-history-list {
+    border: 1px solid var(--hwt-gray-200);
+    border-radius: var(--hwt-radius-sm);
+    overflow: hidden;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.hwt-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.hwt-history-table thead {
+    background: var(--hwt-gray-50);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.hwt-history-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--hwt-gray-600);
+    border-bottom: 2px solid var(--hwt-gray-200);
+}
+
+.hwt-history-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--hwt-gray-100);
+    vertical-align: middle;
+}
+
+.hwt-history-table tbody tr:hover {
+    background: var(--hwt-gray-50);
+}
+
+.hwt-history-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ============================================================
    MODAL
    ============================================================ */
 .hwt-modal-overlay {

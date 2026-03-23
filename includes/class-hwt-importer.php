@@ -334,6 +334,8 @@ class HWT_Importer {
 
             $results[] = array(
                 'sku'             => $sku,
+                'product_id'      => $product_id,
+                'product_title'   => $product->get_name(),
                 'status'          => $status,
                 'images_imported' => $images_imported,
                 'images_skipped'  => $images_skipped,
@@ -346,6 +348,34 @@ class HWT_Importer {
 
         $new_offset = $offset + $processed;
         $done       = $new_offset >= $job['total'];
+
+        // Accumulate results in the import history option.
+        $history = get_option( 'hwt_import_history', array() );
+        if ( empty( $history ) || $offset === 0 ) {
+            // First batch — start fresh history.
+            $history = array(
+                'date'      => current_time( 'mysql' ),
+                'total'     => $job['total'],
+                'overwrite' => $job['overwrite'],
+                'products'  => array(),
+                'stats'     => array( 'imported' => 0, 'skipped' => 0, 'failed' => 0 ),
+            );
+        }
+
+        foreach ( $results as $r ) {
+            $history['products'][] = $r;
+            if ( $r['status'] === 'success' || $r['status'] === 'partial' ) {
+                $history['stats']['imported'] += ( isset( $r['images_imported'] ) ? $r['images_imported'] : 0 );
+                $history['stats']['skipped']  += ( isset( $r['images_skipped'] ) ? $r['images_skipped'] : 0 );
+                if ( $r['status'] === 'partial' ) $history['stats']['failed']++;
+            } elseif ( $r['status'] === 'error' ) {
+                $history['stats']['failed']++;
+            } elseif ( $r['status'] === 'skipped' ) {
+                $history['stats']['skipped']++;
+            }
+        }
+
+        update_option( 'hwt_import_history', $history, false );
 
         if ( $done ) {
             $this->logger->info( 'Import complete.' );
