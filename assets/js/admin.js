@@ -307,8 +307,26 @@
 
                 var d = res.data;
                 var skuList = [];
+                var detailHtml = '';
+                var hasGalleryOnly = false;
+
                 for (var i = 0; i < d.missing_skus.length; i++) {
-                    skuList.push(d.missing_skus[i].sku);
+                    var item = d.missing_skus[i];
+                    skuList.push(item.sku);
+
+                    var badges = '';
+                    var detail = item.detail || '';
+                    if (detail.indexOf('no featured') !== -1) {
+                        badges += '<span class="hwt-log-badge hwt-log-badge-error">no featured</span> ';
+                    }
+                    if (detail.indexOf('no gallery') !== -1) {
+                        badges += '<span class="hwt-log-badge hwt-log-badge-skipped">no gallery</span> ';
+                        if (detail.indexOf('no featured') === -1) {
+                            hasGalleryOnly = true;
+                        }
+                    }
+
+                    detailHtml += '<tr><td><strong>' + escHtml(item.sku) + '</strong></td><td>' + badges + '</td></tr>';
                 }
 
                 // Show results.
@@ -318,7 +336,16 @@
                     'Scanned ' + d.total_scanned + ' products. ' +
                     d.missing_count + ' are missing images.'
                 );
+                $('#hwt-scan-detail-body').html(detailHtml);
+                $('#hwt-scan-detail-list').removeClass('hwt-hidden');
                 $('#hwt-scan-skus-output').val(skuList.join('\n'));
+
+                // Show info note if any products are missing only gallery.
+                if (hasGalleryOnly) {
+                    $('#hwt-scan-info').removeClass('hwt-hidden').css('display', 'flex');
+                } else {
+                    $('#hwt-scan-info').addClass('hwt-hidden');
+                }
             },
             error: function () {
                 $btn.removeClass('loading');

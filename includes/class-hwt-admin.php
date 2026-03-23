@@ -472,9 +472,26 @@ class HWT_Admin {
                     </div>
                     <p id="hwt-scan-summary" class="hwt-scan-summary"></p>
 
+                    <div id="hwt-scan-info" class="hwt-hidden" style="margin:0 20px 14px; padding:10px 14px; background:#e8f4fd; border:1px solid #bee5f7; border-radius:6px; font-size:12px; color:#0c5460; display:flex; align-items:flex-start; gap:8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span>Products showing <strong>"no gallery"</strong> only may not actually need fixing — some products simply don't have gallery images on the source site. Check the source site to confirm before importing.</span>
+                    </div>
+
+                    <div id="hwt-scan-detail-list" class="hwt-hidden" style="margin:0 20px 14px; max-height:300px; overflow-y:auto; border:1px solid #dee2e6; border-radius:6px;">
+                        <table class="hwt-history-table" style="margin:0;">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Missing</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hwt-scan-detail-body"></tbody>
+                        </table>
+                    </div>
+
                     <div class="hwt-scan-skus-wrap">
-                        <label for="hwt-scan-skus-output">SKUs missing images:</label>
-                        <textarea id="hwt-scan-skus-output" rows="8" readonly></textarea>
+                        <label for="hwt-scan-skus-output">SKU list (for copy/import):</label>
+                        <textarea id="hwt-scan-skus-output" rows="4" readonly></textarea>
                     </div>
 
                     <div class="hwt-scan-actions">
