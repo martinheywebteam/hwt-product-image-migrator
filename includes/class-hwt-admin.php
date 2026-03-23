@@ -566,6 +566,7 @@ class HWT_Admin {
                             <table class="hwt-history-table">
                                 <thead>
                                     <tr>
+                                        <th style="width:50px;"></th>
                                         <th>Status</th>
                                         <th>SKU</th>
                                         <th>Product</th>
@@ -575,14 +576,33 @@ class HWT_Admin {
                                 </thead>
                                 <tbody>
                                     <?php foreach ( $products as $p ) :
-                                        $edit_url = admin_url( 'post.php?post=' . intval( $p['product_id'] ) . '&action=edit' );
+                                        $edit_url    = admin_url( 'post.php?post=' . intval( $p['product_id'] ) . '&action=edit' );
                                         $badge_class = 'hwt-log-badge-' . $p['status'];
-                                        $p_title = isset( $p['product_title'] ) ? $p['product_title'] : '';
+                                        $p_title     = isset( $p['product_title'] ) ? $p['product_title'] : '';
+                                        $thumb_url   = '';
+                                        if ( ! empty( $p['product_id'] ) ) {
+                                            $thumb_id = get_post_thumbnail_id( intval( $p['product_id'] ) );
+                                            if ( $thumb_id ) {
+                                                $thumb_src = wp_get_attachment_image_src( $thumb_id, 'thumbnail' );
+                                                if ( $thumb_src ) {
+                                                    $thumb_url = $thumb_src[0];
+                                                }
+                                            }
+                                        }
                                     ?>
                                     <tr data-sku="<?php echo esc_attr( strtolower( $p['sku'] ) ); ?>" data-title="<?php echo esc_attr( strtolower( $p_title ) ); ?>" data-status="<?php echo esc_attr( $p['status'] ); ?>">
+                                        <td>
+                                            <?php if ( $thumb_url ) : ?>
+                                                <img src="<?php echo esc_url( $thumb_url ); ?>" alt="" class="hwt-history-thumb">
+                                            <?php else : ?>
+                                                <span class="hwt-history-thumb-empty">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td><span class="hwt-log-badge <?php echo esc_attr( $badge_class ); ?>"><?php echo esc_html( $p['status'] ); ?></span></td>
                                         <td><strong><?php echo esc_html( $p['sku'] ); ?></strong></td>
-                                        <td><?php echo esc_html( isset( $p['product_title'] ) ? $p['product_title'] : '—' ); ?></td>
+                                        <td><?php echo esc_html( $p_title ? $p_title : '—' ); ?></td>
                                         <td style="font-size:12px; color:#6c757d;"><?php echo esc_html( $p['message'] ); ?></td>
                                         <td><a href="<?php echo esc_url( $edit_url ); ?>" class="hwt-btn hwt-btn-secondary hwt-btn-sm" target="_blank">Edit</a></td>
                                     </tr>

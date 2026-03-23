@@ -1073,6 +1073,27 @@ h2.hwt-title {
     border-bottom: none;
 }
 
+.hwt-history-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--hwt-gray-200);
+    display: block;
+}
+
+.hwt-history-thumb-empty {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    border: 1px dashed var(--hwt-gray-300);
+    background: var(--hwt-gray-50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--hwt-gray-400);
+}
+
 /* ============================================================
    DIAGNOSTICS GRID
    ============================================================ */
