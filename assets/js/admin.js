@@ -333,9 +333,10 @@
 
         $('.hwt-history-table tbody tr').each(function () {
             var $row = $(this);
-            var sku = $row.data('sku') || '';
-            var title = $row.data('title') || '';
-            var status = $row.data('status') || '';
+            // Use attr() instead of data() — jQuery's data() auto-converts numeric strings to numbers.
+            var sku = String($row.attr('data-sku') || '').toLowerCase();
+            var title = String($row.attr('data-title') || '').toLowerCase();
+            var status = String($row.attr('data-status') || '').toLowerCase();
 
             var matchesSearch = !query || sku.indexOf(query) !== -1 || title.indexOf(query) !== -1;
             var matchesFilter = activeFilter === 'all' || status === activeFilter;
