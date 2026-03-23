@@ -322,6 +322,20 @@
         }, 300);
     });
 
+    // Copy diagnostics to clipboard.
+    $('#hwt-diag-copy').on('click', function (e) {
+        e.preventDefault();
+        var textarea = document.getElementById('hwt-diag-output');
+        textarea.select();
+        document.execCommand('copy');
+
+        var $btn = $(this);
+        $btn.find('.hwt-btn-text').text('Copied!');
+        setTimeout(function () {
+            $btn.find('.hwt-btn-text').text('Copy to Clipboard');
+        }, 2000);
+    });
+
     // =========================================================================
     // History: Search & Filter
     // =========================================================================

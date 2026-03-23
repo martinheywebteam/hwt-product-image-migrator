@@ -645,6 +645,12 @@ class HWT_Admin {
                     <div class="hwt-card">
                         <div class="hwt-card-body">
                             <textarea id="hwt-diag-output" rows="22" readonly style="width:100%;font-family:monospace;font-size:12px;background:#f8f9fa;padding:12px;border:1px solid #dee2e6;border-radius:6px;box-sizing:border-box;"></textarea>
+                            <div style="margin-top:10px;">
+                                <button id="hwt-diag-copy" class="hwt-btn hwt-btn-secondary hwt-btn-sm">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                    <span class="hwt-btn-text">Copy to Clipboard</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
