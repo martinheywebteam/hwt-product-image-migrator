@@ -6,94 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 class HWT_Importer {
 
     private $logger;
-    private $upload_profile = null;
 
     public function __construct( HWT_Logger $logger ) {
         $this->logger = $logger;
-    }
-
-    /**
-     * Auto-detect how this site stores attachments by examining an existing working one.
-     * Called once per import session, result is cached.
-     *
-     * Detects:
-     *   - Whether _wp_attached_file stores a full URL or relative path
-     *   - Whether files live in /sites/{blog_id}/ or the main uploads dir
-     *   - Whether URLs include the subsite path (e.g. /uk/)
-     *   - The base URL used for uploads
-     */
-    private function detect_upload_profile() {
-        if ( $this->upload_profile !== null ) {
-            return $this->upload_profile;
-        }
-
-        global $wpdb;
-
-        $profile = array(
-            'uses_full_url'       => false,
-            'files_in_sites_dir'  => true,
-            'url_has_subsite'     => true,
-            'base_url'            => '',
-        );
-
-        // Find a recent image attachment NOT created by our plugin.
-        $sample_id = $wpdb->get_var(
-            "SELECT p.ID FROM {$wpdb->posts} p
-             LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_hwt_source_url'
-             WHERE p.post_type = 'attachment'
-               AND p.post_mime_type LIKE 'image/%'
-               AND pm.meta_id IS NULL
-             ORDER BY p.ID DESC
-             LIMIT 1"
-        );
-
-        if ( ! $sample_id ) {
-            // No sample found — use defaults (standard WP behavior).
-            $this->logger->info( 'Upload profile: no sample attachment found, using defaults.' );
-            $this->upload_profile = $profile;
-            return $profile;
-        }
-
-        $attached_file = get_post_meta( intval( $sample_id ), '_wp_attached_file', true );
-        $file_path     = get_attached_file( intval( $sample_id ) );
-
-        // Check if _wp_attached_file is a full URL.
-        if ( $attached_file && strpos( $attached_file, 'http' ) === 0 ) {
-            $profile['uses_full_url'] = true;
-
-            $parsed = wp_parse_url( $attached_file );
-            $path   = isset( $parsed['path'] ) ? $parsed['path'] : '';
-            $blog_id = get_current_blog_id();
-
-            // Does the URL contain /sites/{blog_id}/?
-            $profile['url_has_subsite'] = false;
-            if ( is_multisite() && $blog_id > 1 ) {
-                $blog_details = get_blog_details();
-                $subsite_path = $blog_details ? trim( $blog_details->path, '/' ) : '';
-                $profile['url_has_subsite'] = ( ! empty( $subsite_path ) && strpos( $path, '/' . $subsite_path . '/' ) !== false );
-            }
-
-            // Extract base URL for later use.
-            if ( preg_match( '#^(https?://.+/uploads)/?(sites/\d+/)?#', $attached_file, $m ) ) {
-                $profile['base_url'] = rtrim( $m[0], '/' );
-            }
-        }
-
-        // Check if files physically live in /sites/{blog_id}/.
-        if ( $file_path ) {
-            $blog_id = get_current_blog_id();
-            $profile['files_in_sites_dir'] = ( is_multisite() && $blog_id > 1 && strpos( $file_path, '/sites/' . $blog_id . '/' ) !== false );
-        }
-
-        $this->logger->info( "Upload profile detected (sample ID {$sample_id}):" );
-        $this->logger->info( "  uses_full_url: " . ( $profile['uses_full_url'] ? 'YES' : 'NO' ) );
-        $this->logger->info( "  files_in_sites_dir: " . ( $profile['files_in_sites_dir'] ? 'YES' : 'NO' ) );
-        $this->logger->info( "  url_has_subsite: " . ( $profile['url_has_subsite'] ? 'YES' : 'NO' ) );
-        $this->logger->info( "  base_url: " . ( $profile['base_url'] ?: '(default)' ) );
-        $this->logger->info( "  sample _wp_attached_file: {$attached_file}" );
-
-        $this->upload_profile = $profile;
-        return $profile;
     }
 
     /**
@@ -261,44 +176,19 @@ class HWT_Importer {
                 $has_featured = (bool) $product->get_image_id();
                 $has_gallery  = ! empty( $product->get_gallery_image_ids() );
 
-                $would_import_featured = 0;
-                $would_skip_featured   = 0;
-                $would_import_gallery  = 0;
-                $would_skip_gallery    = 0;
-
                 if ( ! empty( $featured_url ) ) {
-                    if ( $has_featured && ! $job['overwrite'] ) {
-                        $would_skip_featured = 1;
-                    } else {
-                        $would_import_featured = 1;
-                    }
+                    if ( $has_featured && ! $job['overwrite'] ) { $images_skipped++; } else { $images_imported++; }
                 }
-
                 if ( ! empty( $gallery_urls ) ) {
-                    if ( $has_gallery && ! $job['overwrite'] ) {
-                        $would_skip_gallery = count( $gallery_urls );
-                    } else {
-                        $would_import_gallery = count( $gallery_urls );
-                    }
+                    if ( $has_gallery && ! $job['overwrite'] ) { $images_skipped += count( $gallery_urls ); } else { $images_imported += count( $gallery_urls ); }
                 }
 
-                $images_imported = $would_import_featured + $would_import_gallery;
-                $images_skipped  = $would_skip_featured + $would_skip_gallery;
-
-                $status = 'success';
-                if ( $images_imported === 0 && $images_skipped > 0 ) {
-                    $status = 'skipped';
-                }
-
+                $status = ( $images_imported === 0 && $images_skipped > 0 ) ? 'skipped' : 'success';
                 $msg = "DRY RUN: {$images_imported} would import, {$images_skipped} would skip";
-                if ( $has_featured ) $msg .= ' (has featured)';
-                if ( $has_gallery )  $msg .= ' (has gallery)';
-
                 $this->logger->info( "SKU={$sku} | {$msg}" );
 
             } else {
                 // --- REAL IMPORT ---
-                // Featured image.
                 if ( ! empty( $featured_url ) ) {
                     if ( $product->get_image_id() && ! $job['overwrite'] ) {
                         $images_skipped++;
@@ -316,22 +206,17 @@ class HWT_Importer {
                     }
                 }
 
-                // Gallery images.
                 if ( ! empty( $gallery_urls ) ) {
                     $existing_ids = $product->get_gallery_image_ids();
-
                     if ( ! empty( $existing_ids ) && ! $job['overwrite'] ) {
                         $images_skipped += count( $gallery_urls );
                         $new_gallery_ids = $existing_ids;
-                        $this->logger->info( "SKU={$sku} | Gallery exists (" . count( $existing_ids ) . "), skipping." );
                     } else {
                         $new_gallery_ids = $job['overwrite'] ? array() : $existing_ids;
-
                         foreach ( $gallery_urls as $i => $g_url ) {
                             $att_id = $this->sideload_image( $g_url, $product_id, $job['overwrite'] );
                             if ( is_wp_error( $att_id ) ) {
                                 $errors[] = 'Gallery ' . ( $i + 1 ) . ': ' . $att_id->get_error_message();
-                                $this->logger->error( "SKU={$sku} | Gallery " . ( $i + 1 ) . " failed: {$att_id->get_error_message()}" );
                             } else {
                                 $new_gallery_ids[] = $att_id;
                                 $images_imported++;
@@ -341,37 +226,20 @@ class HWT_Importer {
                     }
                 }
 
-                // Save to product via WooCommerce API.
+                // Save via WooCommerce API.
                 $changed = false;
-                if ( $featured_att_id !== null ) {
-                    $product->set_image_id( $featured_att_id );
-                    $changed = true;
-                }
-                if ( ! empty( $new_gallery_ids ) ) {
-                    $product->set_gallery_image_ids( $new_gallery_ids );
-                    $changed = true;
-                }
+                if ( $featured_att_id !== null ) { $product->set_image_id( $featured_att_id ); $changed = true; }
+                if ( ! empty( $new_gallery_ids ) ) { $product->set_gallery_image_ids( $new_gallery_ids ); $changed = true; }
                 if ( $changed ) {
                     $product->save();
                     $this->logger->info( "SKU={$sku} | Product saved." );
                 }
-            }
 
-            // Build result.
-            $status = isset( $status ) ? $status : 'success';
-            if ( ! $is_dry_run ) {
-                if ( ! empty( $errors ) && 0 === $images_imported ) {
-                    $status = 'error';
-                } elseif ( ! empty( $errors ) ) {
-                    $status = 'partial';
-                } elseif ( $images_imported === 0 && $images_skipped > 0 ) {
-                    $status = 'skipped';
-                } else {
-                    $status = 'success';
-                }
-            }
+                $status = 'success';
+                if ( ! empty( $errors ) && 0 === $images_imported ) { $status = 'error'; }
+                elseif ( ! empty( $errors ) ) { $status = 'partial'; }
+                elseif ( $images_imported === 0 && $images_skipped > 0 ) { $status = 'skipped'; }
 
-            if ( ! $is_dry_run ) {
                 $msg = "{$images_imported} imported";
                 if ( $images_skipped > 0 ) $msg .= ", {$images_skipped} skipped";
                 if ( ! empty( $errors ) )  $msg .= ', errors: ' . implode( '; ', $errors );
@@ -395,42 +263,28 @@ class HWT_Importer {
         $new_offset = $offset + $processed;
         $done       = $new_offset >= $job['total'];
 
-        // Accumulate results in the current import run.
+        // Save cumulative history (keeps last 10 runs).
         $all_runs    = get_option( 'hwt_import_history_runs', array() );
         $current_key = 'run_' . md5( $job['csv_path'] . $job['log_file'] );
 
         if ( ! isset( $all_runs[ $current_key ] ) || $offset === 0 ) {
             $all_runs[ $current_key ] = array(
-                'date'      => current_time( 'mysql' ),
-                'total'     => $job['total'],
-                'overwrite' => $job['overwrite'],
-                'dry_run'   => ! empty( $job['dry_run'] ),
-                'products'  => array(),
-                'stats'     => array( 'imported' => 0, 'skipped' => 0, 'failed' => 0 ),
+                'date' => current_time( 'mysql' ), 'total' => $job['total'],
+                'overwrite' => $job['overwrite'], 'dry_run' => ! empty( $job['dry_run'] ),
+                'products' => array(), 'stats' => array( 'imported' => 0, 'skipped' => 0, 'failed' => 0 ),
             );
         }
-
         foreach ( $results as $r ) {
             $all_runs[ $current_key ]['products'][] = $r;
             if ( $r['status'] === 'success' || $r['status'] === 'partial' ) {
                 $all_runs[ $current_key ]['stats']['imported'] += ( isset( $r['images_imported'] ) ? $r['images_imported'] : 0 );
                 $all_runs[ $current_key ]['stats']['skipped']  += ( isset( $r['images_skipped'] ) ? $r['images_skipped'] : 0 );
                 if ( $r['status'] === 'partial' ) $all_runs[ $current_key ]['stats']['failed']++;
-            } elseif ( $r['status'] === 'error' ) {
-                $all_runs[ $current_key ]['stats']['failed']++;
-            } elseif ( $r['status'] === 'skipped' ) {
-                $all_runs[ $current_key ]['stats']['skipped']++;
-            }
+            } elseif ( $r['status'] === 'error' ) { $all_runs[ $current_key ]['stats']['failed']++;
+            } elseif ( $r['status'] === 'skipped' ) { $all_runs[ $current_key ]['stats']['skipped']++; }
         }
-
-        // Keep last 10 runs maximum.
-        if ( count( $all_runs ) > 10 ) {
-            $all_runs = array_slice( $all_runs, -10, 10, true );
-        }
-
+        if ( count( $all_runs ) > 10 ) { $all_runs = array_slice( $all_runs, -10, 10, true ); }
         update_option( 'hwt_import_history_runs', $all_runs, false );
-
-        // Also keep backward-compatible single history for the latest run.
         update_option( 'hwt_import_history', $all_runs[ $current_key ], false );
 
         if ( $done ) {
@@ -478,96 +332,85 @@ class HWT_Importer {
             }
         }
 
-        // Auto-detect upload format from existing working attachments.
-        $profile = $this->detect_upload_profile();
-
         // Encode URL for special characters (e.g. Hermès).
         $encoded_url = $this->encode_url( $url );
 
-        // If the site stores files outside /sites/{blog_id}/, override upload dir.
-        $needs_dir_fix = ( is_multisite() && get_current_blog_id() > 1 && ! $profile['files_in_sites_dir'] );
-        if ( $needs_dir_fix ) {
-            add_filter( 'upload_dir', array( $this, 'adapt_upload_dir' ) );
-        }
+        // Override upload dir to use MAIN uploads (no /sites/2/) — matching how
+        // manually uploaded images work on this multisite.
+        add_filter( 'upload_dir', array( $this, 'use_main_upload_dir' ) );
 
         $attachment_id = media_sideload_image( $encoded_url, $product_id, '', 'id' );
 
         if ( is_wp_error( $attachment_id ) ) {
             $attachment_id = media_sideload_image( $url, $product_id, '', 'id' );
             if ( is_wp_error( $attachment_id ) ) {
-                if ( $needs_dir_fix ) {
-                    remove_filter( 'upload_dir', array( $this, 'adapt_upload_dir' ) );
-                }
+                remove_filter( 'upload_dir', array( $this, 'use_main_upload_dir' ) );
                 return $attachment_id;
             }
         }
 
-        if ( $needs_dir_fix ) {
-            remove_filter( 'upload_dir', array( $this, 'adapt_upload_dir' ) );
-        }
+        remove_filter( 'upload_dir', array( $this, 'use_main_upload_dir' ) );
 
-        // If the site stores full URLs in _wp_attached_file, convert relative to full URL.
-        if ( $profile['uses_full_url'] ) {
-            $current_file = get_post_meta( $attachment_id, '_wp_attached_file', true );
-            if ( $current_file && strpos( $current_file, 'http' ) !== 0 ) {
-                if ( ! empty( $profile['base_url'] ) ) {
-                    $full_url = $profile['base_url'] . '/' . $current_file;
-                } else {
-                    $parsed   = wp_parse_url( site_url() );
-                    $base_url = $parsed['scheme'] . '://' . $parsed['host'];
-                    $full_url = $base_url . '/wp-content/uploads/' . $current_file;
-                }
+        // Fix _wp_attached_file to store FULL URL (matching working attachments on this site).
+        $current_file = get_post_meta( $attachment_id, '_wp_attached_file', true );
+        if ( $current_file && strpos( $current_file, 'http' ) !== 0 ) {
+            // It's a relative path — convert to full URL matching the working format.
+            $site_url = site_url();
+            // Strip /uk or any subsite path from the domain for the uploads URL.
+            $parsed   = wp_parse_url( $site_url );
+            $base_url = $parsed['scheme'] . '://' . $parsed['host'];
+            $full_url = $base_url . '/wp-content/uploads/' . $current_file;
+            update_post_meta( $attachment_id, '_wp_attached_file', $full_url );
 
-                update_post_meta( $attachment_id, '_wp_attached_file', $full_url );
-
-                global $wpdb;
-                $wpdb->update(
-                    $wpdb->posts,
-                    array( 'guid' => $full_url ),
-                    array( 'ID' => $attachment_id )
-                );
-                clean_post_cache( $attachment_id );
-            }
+            // Also update the guid to match.
+            global $wpdb;
+            $wpdb->update(
+                $wpdb->posts,
+                array( 'guid' => $full_url ),
+                array( 'ID' => $attachment_id )
+            );
+            clean_post_cache( $attachment_id );
         }
 
         // Store source URL for duplicate prevention.
         update_post_meta( $attachment_id, '_hwt_source_url', $url );
 
         // Log details.
+        $file_url  = wp_get_attachment_url( $attachment_id );
+        $file_path = get_attached_file( $attachment_id );
         $this->logger->info( "  -> att_id: {$attachment_id}" );
         $this->logger->info( "  -> _wp_attached_file: " . get_post_meta( $attachment_id, '_wp_attached_file', true ) );
-        $this->logger->info( "  -> wp_get_attachment_url: " . wp_get_attachment_url( $attachment_id ) );
+        $this->logger->info( "  -> get_attached_file: {$file_path}" );
+        $this->logger->info( "  -> file_exists: " . ( file_exists( $file_path ) ? 'YES' : 'NO' ) );
+        $this->logger->info( "  -> wp_get_attachment_url: {$file_url}" );
 
         return $attachment_id;
     }
 
     /**
-     * Filter: Adapt upload dir based on detected profile.
-     * Strips /sites/{blog_id}/ and subsite path when the site doesn't use them.
+     * Encode URL path segments for special characters.
      */
-    public function adapt_upload_dir( $uploads ) {
+    /**
+     * Override wp_upload_dir to use the MAIN uploads directory (no /sites/X/).
+     * This matches how manually uploaded images are stored on this multisite.
+     */
+    public function use_main_upload_dir( $uploads ) {
         if ( ! is_multisite() || get_current_blog_id() <= 1 ) {
             return $uploads;
         }
 
-        $blog_id       = get_current_blog_id();
+        $blog_id = get_current_blog_id();
         $sites_segment = '/sites/' . $blog_id;
 
-        // Remove /sites/{blog_id} from paths and URLs.
+        // Remove /sites/{blog_id} from all paths and URLs.
         $uploads['basedir'] = str_replace( $sites_segment, '', $uploads['basedir'] );
         $uploads['path']    = str_replace( $sites_segment, '', $uploads['path'] );
         $uploads['baseurl'] = str_replace( $sites_segment, '', $uploads['baseurl'] );
         $uploads['url']     = str_replace( $sites_segment, '', $uploads['url'] );
 
-        // Remove subsite path (e.g. /uk/) from URLs if detected profile shows it's not used.
-        $blog_details = get_blog_details();
-        if ( $blog_details ) {
-            $subsite_path = trim( $blog_details->path, '/' );
-            if ( ! empty( $subsite_path ) ) {
-                $uploads['baseurl'] = str_replace( '/' . $subsite_path . '/wp-content', '/wp-content', $uploads['baseurl'] );
-                $uploads['url']     = str_replace( '/' . $subsite_path . '/wp-content', '/wp-content', $uploads['url'] );
-            }
-        }
+        // Also remove /uk/ (subsite path) from URLs to match working format.
+        $uploads['baseurl'] = str_replace( '/uk/wp-content', '/wp-content', $uploads['baseurl'] );
+        $uploads['url']     = str_replace( '/uk/wp-content', '/wp-content', $uploads['url'] );
 
         return $uploads;
     }
