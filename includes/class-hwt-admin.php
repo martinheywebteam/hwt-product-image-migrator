@@ -599,31 +599,56 @@ class HWT_Admin {
             <!-- DIAGNOSTICS TAB -->
             <!-- ============================================================ -->
             <div class="hwt-tab-content" id="hwt-tab-diagnostics">
-                <div class="hwt-card">
-                    <div class="hwt-card-header">
-                        <div class="hwt-card-icon hwt-card-icon--scan">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                <div class="hwt-diag-grid">
+                    <!-- Site Diagnostics card -->
+                    <div class="hwt-card">
+                        <div class="hwt-card-header">
+                            <div class="hwt-card-icon hwt-card-icon--scan">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                            </div>
+                            <div>
+                                <h2>Site Diagnostics</h2>
+                                <p>Inspect your WordPress &amp; upload configuration.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2>Site Diagnostics</h2>
-                            <p>Run this to see exactly how WordPress is configured on this site. Share the output if you need support.</p>
+                        <div class="hwt-card-body">
+                            <button id="hwt-diag-btn" class="hwt-btn hwt-btn-primary">
+                                <span class="hwt-btn-text">Run Diagnostics</span>
+                                <span class="hwt-spinner"></span>
+                            </button>
                         </div>
                     </div>
-                    <div class="hwt-card-body">
-                        <button id="hwt-diag-btn" class="hwt-btn hwt-btn-primary">
-                            <span class="hwt-btn-text">Run Diagnostics</span>
-                            <span class="hwt-spinner"></span>
-                        </button>
 
-                        <div style="margin-top:20px; padding:16px; background:#fff3cd; border:1px solid #ffc107; border-radius:6px;">
-                            <h3 style="margin:0 0 8px; font-size:14px; color:#856404;">Cleanup Imported Attachments</h3>
-                            <p style="margin:0 0 12px; font-size:13px; color:#856404;">Delete ALL attachments created by this plugin (tagged with <code>_hwt_source_url</code>). Also clears product image assignments for affected products. Use this before a fresh re-import.</p>
+                    <!-- Cleanup card -->
+                    <div class="hwt-card" style="border-left: 3px solid #ffc107;">
+                        <div class="hwt-card-header">
+                            <div class="hwt-card-icon" style="background:#fff3cd; color:#856404;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            </div>
+                            <div>
+                                <h2>Cleanup Attachments</h2>
+                                <p>Delete all images imported by this plugin and clear product assignments.</p>
+                            </div>
+                        </div>
+                        <div class="hwt-card-body">
                             <button id="hwt-cleanup-trigger" class="hwt-btn hwt-btn-secondary">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                                 <span>Delete All Imported Attachments</span>
                             </button>
-                            <span id="hwt-cleanup-result" style="margin-left:12px; font-size:13px;"></span>
+                            <div id="hwt-cleanup-result" style="margin-top:10px; font-size:13px;"></div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Diagnostics output (full width below) -->
+                <div id="hwt-diag-results" class="hwt-hidden">
+                    <div class="hwt-card">
+                        <div class="hwt-card-body">
+                            <textarea id="hwt-diag-output" rows="22" readonly style="width:100%;font-family:monospace;font-size:12px;background:#f8f9fa;padding:12px;border:1px solid #dee2e6;border-radius:6px;box-sizing:border-box;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Cleanup confirmation modal -->
             <div id="hwt-modal-overlay" class="hwt-modal-overlay hwt-hidden">
@@ -641,13 +666,6 @@ class HWT_Admin {
                             <span class="hwt-btn-text">Yes, Delete Everything</span>
                             <span class="hwt-spinner"></span>
                         </button>
-                    </div>
-                </div>
-            </div>
-
-                        <div id="hwt-diag-results" class="hwt-hidden" style="margin-top:16px;">
-                            <textarea id="hwt-diag-output" rows="25" readonly style="width:100%;font-family:monospace;font-size:12px;background:#f8f9fa;padding:12px;border:1px solid #dee2e6;border-radius:6px;"></textarea>
-                        </div>
                     </div>
                 </div>
             </div>

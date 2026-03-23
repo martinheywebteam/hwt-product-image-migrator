@@ -1088,6 +1088,20 @@ h2.hwt-title {
 }
 
 /* ============================================================
+   DIAGNOSTICS GRID
+   ============================================================ */
+.hwt-diag-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 680px) {
+    .hwt-diag-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
    MODAL
    ============================================================ */
 .hwt-modal-overlay {
