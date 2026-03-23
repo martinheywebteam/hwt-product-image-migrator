@@ -3,7 +3,7 @@
  * Plugin Name: heyWebTeam - Product Image Migrator
  * Plugin URI:  https://heywebteam.com
  * Description: Export and import WooCommerce product images (featured + gallery) between sites, matched by SKU.
- * Version:     2.6.0
+ * Version:     2.6.1
  * Author:      heyWebTeam
  * Author URI:  https://heywebteam.com
  * License:     GPL-2.0+
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'HWT_PIM_VERSION', '2.6.0' );
+define( 'HWT_PIM_VERSION', '2.6.1' );
 define( 'HWT_PIM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HWT_PIM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'HWT_PIM_LOG_DIR', HWT_PIM_PLUGIN_DIR . 'logs' );

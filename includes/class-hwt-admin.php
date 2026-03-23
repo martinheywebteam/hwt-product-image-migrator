@@ -200,16 +200,41 @@ class HWT_Admin {
                         <div class="hwt-guide-tips-card">
                             <h3>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                                Tips
+                                Tips &amp; Good to Know
                             </h3>
-                            <ul>
-                                <li>Products are matched by <strong>SKU</strong> &mdash; make sure SKUs are identical on both sites</li>
-                                <li>The source site must be online during import (images are downloaded from its URLs)</li>
-                                <li>Use the <strong>SKU filter</strong> on the Export or Import tab to process only specific products</li>
-                                <li>Toggle <strong>Overwrite existing</strong> on the Import tab to replace images that are already set</li>
-                                <li>You can <strong>pause and resume</strong> the import at any time</li>
-                                <li>Download the <strong>log file</strong> after import for a full record of what happened</li>
-                                <li>Use the <strong>Diagnostics</strong> tab to troubleshoot site configuration issues</li>
+                            <ul class="hwt-tip-list">
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                                    Products are matched by <strong>SKU</strong> &mdash; make sure SKUs are identical on both sites
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    The source site must be <strong>online</strong> during import (images are downloaded from its URLs)
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                                    Use the <strong>SKU filter</strong> on the Export or Import tab to process only specific products
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                    Toggle <strong>Overwrite existing</strong> on the Import tab to replace images that are already set
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="10 8 16 12 10 16"/></svg>
+                                    You can <strong>pause and resume</strong> the import at any time &mdash; progress is saved
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    Download the <strong>log file</strong> after import for a full record of what happened
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                                    Use the <strong>Diagnostics</strong> tab to troubleshoot site configuration issues
+                                </li>
+                                <li>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                                    Works on <strong>single sites and multisite networks</strong> &mdash; upload paths are auto-detected
+                                </li>
                             </ul>
                         </div>
                     </div>
