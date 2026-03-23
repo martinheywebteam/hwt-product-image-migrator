@@ -327,15 +327,19 @@
     // =========================================================================
     var activeFilter = 'all';
 
+    // Strip accents: Hermès → hermes, Zürich → zurich, etc.
+    function stripAccents(str) {
+        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+
     function filterHistoryTable() {
-        var query = ($('#hwt-history-search').val() || '').toLowerCase();
+        var query = stripAccents(($('#hwt-history-search').val() || '').toLowerCase());
         var visible = 0;
 
         $('.hwt-history-table tbody tr').each(function () {
             var $row = $(this);
-            // Use attr() instead of data() — jQuery's data() auto-converts numeric strings to numbers.
-            var sku = String($row.attr('data-sku') || '').toLowerCase();
-            var title = String($row.attr('data-title') || '').toLowerCase();
+            var sku = stripAccents(String($row.attr('data-sku') || '').toLowerCase());
+            var title = stripAccents(String($row.attr('data-title') || '').toLowerCase());
             var status = String($row.attr('data-status') || '').toLowerCase();
 
             var matchesSearch = !query || sku.indexOf(query) !== -1 || title.indexOf(query) !== -1;
