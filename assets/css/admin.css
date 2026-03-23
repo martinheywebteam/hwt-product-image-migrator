@@ -327,14 +327,11 @@ h2.hwt-title {
     color: #fff;
 }
 
-.hwt-tooltip:hover::after {
-    content: attr(data-tip);
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 240px;
-    padding: 10px 12px;
+/* Tooltip popup — positioned by JS */
+.hwt-tooltip-popup {
+    position: fixed;
+    width: 260px;
+    padding: 10px 14px;
     background: var(--hwt-gray-900);
     color: #fff;
     font-size: 12px;
@@ -342,25 +339,14 @@ h2.hwt-title {
     line-height: 1.5;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    z-index: 1000;
+    z-index: 100001;
     pointer-events: none;
     animation: hwtTooltipIn 0.15s ease;
 }
 
-.hwt-tooltip:hover::before {
-    content: '';
-    position: absolute;
-    bottom: calc(100% + 2px);
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: var(--hwt-gray-900);
-    z-index: 1001;
-}
-
 @keyframes hwtTooltipIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
-    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================

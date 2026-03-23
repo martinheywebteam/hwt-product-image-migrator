@@ -35,6 +35,43 @@
     });
 
     // =========================================================================
+    // Tooltips — JS-positioned to stay within viewport
+    // =========================================================================
+    var $tooltipPopup = null;
+
+    $(document).on('mouseenter', '.hwt-tooltip', function () {
+        var tip = $(this).attr('data-tip');
+        if (!tip) return;
+
+        if (!$tooltipPopup) {
+            $tooltipPopup = $('<div class="hwt-tooltip-popup"></div>').appendTo('body');
+        }
+
+        $tooltipPopup.text(tip).show();
+
+        var rect = this.getBoundingClientRect();
+        var popW = $tooltipPopup.outerWidth();
+        var popH = $tooltipPopup.outerHeight();
+
+        // Position above the ? icon, clamped to viewport.
+        var top = rect.top - popH - 8;
+        var left = rect.left + (rect.width / 2) - (popW / 2);
+
+        // Clamp left so it doesn't go off-screen.
+        if (left < 8) left = 8;
+        if (left + popW > window.innerWidth - 8) left = window.innerWidth - popW - 8;
+
+        // If no room above, show below.
+        if (top < 8) top = rect.bottom + 8;
+
+        $tooltipPopup.css({ top: top + 'px', left: left + 'px' });
+    });
+
+    $(document).on('mouseleave', '.hwt-tooltip', function () {
+        if ($tooltipPopup) $tooltipPopup.hide();
+    });
+
+    // =========================================================================
     // File upload label
     // =========================================================================
     $('#hwt-import-file').on('change', function () {
