@@ -6,9 +6,94 @@ if ( ! defined( 'ABSPATH' ) ) {
 class HWT_Importer {
 
     private $logger;
+    private $upload_profile = null;
 
     public function __construct( HWT_Logger $logger ) {
         $this->logger = $logger;
+    }
+
+    /**
+     * Auto-detect how this site stores attachments by examining an existing working one.
+     * Called once per import session, result is cached.
+     *
+     * Detects:
+     *   - Whether _wp_attached_file stores a full URL or relative path
+     *   - Whether files live in /sites/{blog_id}/ or the main uploads dir
+     *   - Whether URLs include the subsite path (e.g. /uk/)
+     *   - The base URL used for uploads
+     */
+    private function detect_upload_profile() {
+        if ( $this->upload_profile !== null ) {
+            return $this->upload_profile;
+        }
+
+        global $wpdb;
+
+        $profile = array(
+            'uses_full_url'       => false,
+            'files_in_sites_dir'  => true,
+            'url_has_subsite'     => true,
+            'base_url'            => '',
+        );
+
+        // Find a recent image attachment NOT created by our plugin.
+        $sample_id = $wpdb->get_var(
+            "SELECT p.ID FROM {$wpdb->posts} p
+             LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_hwt_source_url'
+             WHERE p.post_type = 'attachment'
+               AND p.post_mime_type LIKE 'image/%'
+               AND pm.meta_id IS NULL
+             ORDER BY p.ID DESC
+             LIMIT 1"
+        );
+
+        if ( ! $sample_id ) {
+            // No sample found — use defaults (standard WP behavior).
+            $this->logger->info( 'Upload profile: no sample attachment found, using defaults.' );
+            $this->upload_profile = $profile;
+            return $profile;
+        }
+
+        $attached_file = get_post_meta( intval( $sample_id ), '_wp_attached_file', true );
+        $file_path     = get_attached_file( intval( $sample_id ) );
+
+        // Check if _wp_attached_file is a full URL.
+        if ( $attached_file && strpos( $attached_file, 'http' ) === 0 ) {
+            $profile['uses_full_url'] = true;
+
+            $parsed = wp_parse_url( $attached_file );
+            $path   = isset( $parsed['path'] ) ? $parsed['path'] : '';
+            $blog_id = get_current_blog_id();
+
+            // Does the URL contain /sites/{blog_id}/?
+            $profile['url_has_subsite'] = false;
+            if ( is_multisite() && $blog_id > 1 ) {
+                $blog_details = get_blog_details();
+                $subsite_path = $blog_details ? trim( $blog_details->path, '/' ) : '';
+                $profile['url_has_subsite'] = ( ! empty( $subsite_path ) && strpos( $path, '/' . $subsite_path . '/' ) !== false );
+            }
+
+            // Extract base URL for later use.
+            if ( preg_match( '#^(https?://.+/uploads)/?(sites/\d+/)?#', $attached_file, $m ) ) {
+                $profile['base_url'] = rtrim( $m[0], '/' );
+            }
+        }
+
+        // Check if files physically live in /sites/{blog_id}/.
+        if ( $file_path ) {
+            $blog_id = get_current_blog_id();
+            $profile['files_in_sites_dir'] = ( is_multisite() && $blog_id > 1 && strpos( $file_path, '/sites/' . $blog_id . '/' ) !== false );
+        }
+
+        $this->logger->info( "Upload profile detected (sample ID {$sample_id}):" );
+        $this->logger->info( "  uses_full_url: " . ( $profile['uses_full_url'] ? 'YES' : 'NO' ) );
+        $this->logger->info( "  files_in_sites_dir: " . ( $profile['files_in_sites_dir'] ? 'YES' : 'NO' ) );
+        $this->logger->info( "  url_has_subsite: " . ( $profile['url_has_subsite'] ? 'YES' : 'NO' ) );
+        $this->logger->info( "  base_url: " . ( $profile['base_url'] ?: '(default)' ) );
+        $this->logger->info( "  sample _wp_attached_file: {$attached_file}" );
+
+        $this->upload_profile = $profile;
+        return $profile;
     }
 
     /**
@@ -307,85 +392,96 @@ class HWT_Importer {
             }
         }
 
+        // Auto-detect upload format from existing working attachments.
+        $profile = $this->detect_upload_profile();
+
         // Encode URL for special characters (e.g. Hermès).
         $encoded_url = $this->encode_url( $url );
 
-        // Override upload dir to use MAIN uploads (no /sites/2/) — matching how
-        // manually uploaded images work on this multisite.
-        add_filter( 'upload_dir', array( $this, 'use_main_upload_dir' ) );
+        // If the site stores files outside /sites/{blog_id}/, override upload dir.
+        $needs_dir_fix = ( is_multisite() && get_current_blog_id() > 1 && ! $profile['files_in_sites_dir'] );
+        if ( $needs_dir_fix ) {
+            add_filter( 'upload_dir', array( $this, 'adapt_upload_dir' ) );
+        }
 
         $attachment_id = media_sideload_image( $encoded_url, $product_id, '', 'id' );
 
         if ( is_wp_error( $attachment_id ) ) {
             $attachment_id = media_sideload_image( $url, $product_id, '', 'id' );
             if ( is_wp_error( $attachment_id ) ) {
-                remove_filter( 'upload_dir', array( $this, 'use_main_upload_dir' ) );
+                if ( $needs_dir_fix ) {
+                    remove_filter( 'upload_dir', array( $this, 'adapt_upload_dir' ) );
+                }
                 return $attachment_id;
             }
         }
 
-        remove_filter( 'upload_dir', array( $this, 'use_main_upload_dir' ) );
+        if ( $needs_dir_fix ) {
+            remove_filter( 'upload_dir', array( $this, 'adapt_upload_dir' ) );
+        }
 
-        // Fix _wp_attached_file to store FULL URL (matching working attachments on this site).
-        $current_file = get_post_meta( $attachment_id, '_wp_attached_file', true );
-        if ( $current_file && strpos( $current_file, 'http' ) !== 0 ) {
-            // It's a relative path — convert to full URL matching the working format.
-            $site_url = site_url();
-            // Strip /uk or any subsite path from the domain for the uploads URL.
-            $parsed   = wp_parse_url( $site_url );
-            $base_url = $parsed['scheme'] . '://' . $parsed['host'];
-            $full_url = $base_url . '/wp-content/uploads/' . $current_file;
-            update_post_meta( $attachment_id, '_wp_attached_file', $full_url );
+        // If the site stores full URLs in _wp_attached_file, convert relative to full URL.
+        if ( $profile['uses_full_url'] ) {
+            $current_file = get_post_meta( $attachment_id, '_wp_attached_file', true );
+            if ( $current_file && strpos( $current_file, 'http' ) !== 0 ) {
+                if ( ! empty( $profile['base_url'] ) ) {
+                    $full_url = $profile['base_url'] . '/' . $current_file;
+                } else {
+                    $parsed   = wp_parse_url( site_url() );
+                    $base_url = $parsed['scheme'] . '://' . $parsed['host'];
+                    $full_url = $base_url . '/wp-content/uploads/' . $current_file;
+                }
 
-            // Also update the guid to match.
-            global $wpdb;
-            $wpdb->update(
-                $wpdb->posts,
-                array( 'guid' => $full_url ),
-                array( 'ID' => $attachment_id )
-            );
-            clean_post_cache( $attachment_id );
+                update_post_meta( $attachment_id, '_wp_attached_file', $full_url );
+
+                global $wpdb;
+                $wpdb->update(
+                    $wpdb->posts,
+                    array( 'guid' => $full_url ),
+                    array( 'ID' => $attachment_id )
+                );
+                clean_post_cache( $attachment_id );
+            }
         }
 
         // Store source URL for duplicate prevention.
         update_post_meta( $attachment_id, '_hwt_source_url', $url );
 
         // Log details.
-        $file_url  = wp_get_attachment_url( $attachment_id );
-        $file_path = get_attached_file( $attachment_id );
         $this->logger->info( "  -> att_id: {$attachment_id}" );
         $this->logger->info( "  -> _wp_attached_file: " . get_post_meta( $attachment_id, '_wp_attached_file', true ) );
-        $this->logger->info( "  -> get_attached_file: {$file_path}" );
-        $this->logger->info( "  -> file_exists: " . ( file_exists( $file_path ) ? 'YES' : 'NO' ) );
-        $this->logger->info( "  -> wp_get_attachment_url: {$file_url}" );
+        $this->logger->info( "  -> wp_get_attachment_url: " . wp_get_attachment_url( $attachment_id ) );
 
         return $attachment_id;
     }
 
     /**
-     * Encode URL path segments for special characters.
+     * Filter: Adapt upload dir based on detected profile.
+     * Strips /sites/{blog_id}/ and subsite path when the site doesn't use them.
      */
-    /**
-     * Override wp_upload_dir to use the MAIN uploads directory (no /sites/X/).
-     * This matches how manually uploaded images are stored on this multisite.
-     */
-    public function use_main_upload_dir( $uploads ) {
+    public function adapt_upload_dir( $uploads ) {
         if ( ! is_multisite() || get_current_blog_id() <= 1 ) {
             return $uploads;
         }
 
-        $blog_id = get_current_blog_id();
+        $blog_id       = get_current_blog_id();
         $sites_segment = '/sites/' . $blog_id;
 
-        // Remove /sites/{blog_id} from all paths and URLs.
+        // Remove /sites/{blog_id} from paths and URLs.
         $uploads['basedir'] = str_replace( $sites_segment, '', $uploads['basedir'] );
         $uploads['path']    = str_replace( $sites_segment, '', $uploads['path'] );
         $uploads['baseurl'] = str_replace( $sites_segment, '', $uploads['baseurl'] );
         $uploads['url']     = str_replace( $sites_segment, '', $uploads['url'] );
 
-        // Also remove /uk/ (subsite path) from URLs to match working format.
-        $uploads['baseurl'] = str_replace( '/uk/wp-content', '/wp-content', $uploads['baseurl'] );
-        $uploads['url']     = str_replace( '/uk/wp-content', '/wp-content', $uploads['url'] );
+        // Remove subsite path (e.g. /uk/) from URLs if detected profile shows it's not used.
+        $blog_details = get_blog_details();
+        if ( $blog_details ) {
+            $subsite_path = trim( $blog_details->path, '/' );
+            if ( ! empty( $subsite_path ) ) {
+                $uploads['baseurl'] = str_replace( '/' . $subsite_path . '/wp-content', '/wp-content', $uploads['baseurl'] );
+                $uploads['url']     = str_replace( '/' . $subsite_path . '/wp-content', '/wp-content', $uploads['url'] );
+            }
+        }
 
         return $uploads;
     }
