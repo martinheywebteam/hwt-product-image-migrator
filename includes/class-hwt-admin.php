@@ -740,10 +740,15 @@ class HWT_Admin {
         // WooCommerce.
         $diag[] = '--- WooCommerce ---';
         $diag[] = 'WC version: ' . ( defined( 'WC_VERSION' ) ? WC_VERSION : 'N/A' );
-        if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' ) ) {
-            $diag[] = 'HPOS enabled: ' . ( wc_get_container()->get( \Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled() ? 'YES' : 'NO' );
-        } else {
-            $diag[] = 'HPOS: N/A (older WC version)';
+        try {
+            if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' ) && function_exists( 'wc_get_container' ) ) {
+                $controller = wc_get_container()->get( 'Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController' );
+                $diag[] = 'HPOS enabled: ' . ( $controller->custom_orders_table_usage_is_enabled() ? 'YES' : 'NO' );
+            } else {
+                $diag[] = 'HPOS: N/A';
+            }
+        } catch ( \Exception $e ) {
+            $diag[] = 'HPOS: Could not detect (' . $e->getMessage() . ')';
         }
         $diag[] = '';
 
