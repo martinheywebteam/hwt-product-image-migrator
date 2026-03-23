@@ -544,7 +544,24 @@ class HWT_Admin {
                             </div>
                         </div>
 
+                        <!-- Search & Filter -->
+                        <div class="hwt-history-toolbar">
+                            <div class="hwt-history-search">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text" id="hwt-history-search" placeholder="Search by SKU or product name...">
+                            </div>
+                            <div class="hwt-history-filters">
+                                <button class="hwt-filter-btn active" data-filter="all">All <span class="hwt-filter-count"><?php echo count( $products ); ?></span></button>
+                                <button class="hwt-filter-btn" data-filter="success">Success <span class="hwt-filter-count"><?php echo intval( $count_success ); ?></span></button>
+                                <button class="hwt-filter-btn" data-filter="skipped">Skipped <span class="hwt-filter-count"><?php echo intval( $count_skipped ); ?></span></button>
+                                <?php if ( $count_failed > 0 ) : ?>
+                                <button class="hwt-filter-btn" data-filter="error">Failed <span class="hwt-filter-count"><?php echo intval( $count_failed ); ?></span></button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
                         <!-- Product list -->
+                        <div id="hwt-history-empty" class="hwt-history-empty">No products match your search.</div>
                         <div class="hwt-history-list">
                             <table class="hwt-history-table">
                                 <thead>
@@ -560,8 +577,9 @@ class HWT_Admin {
                                     <?php foreach ( $products as $p ) :
                                         $edit_url = admin_url( 'post.php?post=' . intval( $p['product_id'] ) . '&action=edit' );
                                         $badge_class = 'hwt-log-badge-' . $p['status'];
+                                        $p_title = isset( $p['product_title'] ) ? $p['product_title'] : '';
                                     ?>
-                                    <tr>
+                                    <tr data-sku="<?php echo esc_attr( strtolower( $p['sku'] ) ); ?>" data-title="<?php echo esc_attr( strtolower( $p_title ) ); ?>" data-status="<?php echo esc_attr( $p['status'] ); ?>">
                                         <td><span class="hwt-log-badge <?php echo esc_attr( $badge_class ); ?>"><?php echo esc_html( $p['status'] ); ?></span></td>
                                         <td><strong><?php echo esc_html( $p['sku'] ); ?></strong></td>
                                         <td><?php echo esc_html( isset( $p['product_title'] ) ? $p['product_title'] : '—' ); ?></td>

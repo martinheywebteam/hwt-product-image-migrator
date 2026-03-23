@@ -323,6 +323,51 @@
     });
 
     // =========================================================================
+    // History: Search & Filter
+    // =========================================================================
+    var activeFilter = 'all';
+
+    function filterHistoryTable() {
+        var query = ($('#hwt-history-search').val() || '').toLowerCase();
+        var visible = 0;
+
+        $('.hwt-history-table tbody tr').each(function () {
+            var $row = $(this);
+            var sku = $row.data('sku') || '';
+            var title = $row.data('title') || '';
+            var status = $row.data('status') || '';
+
+            var matchesSearch = !query || sku.indexOf(query) !== -1 || title.indexOf(query) !== -1;
+            var matchesFilter = activeFilter === 'all' || status === activeFilter;
+
+            if (matchesSearch && matchesFilter) {
+                $row.show();
+                visible++;
+            } else {
+                $row.hide();
+            }
+        });
+
+        if (visible === 0) {
+            $('#hwt-history-empty').show();
+            $('.hwt-history-list').hide();
+        } else {
+            $('#hwt-history-empty').hide();
+            $('.hwt-history-list').show();
+        }
+    }
+
+    $('#hwt-history-search').on('input', filterHistoryTable);
+
+    $(document).on('click', '.hwt-filter-btn', function (e) {
+        e.preventDefault();
+        $('.hwt-filter-btn').removeClass('active');
+        $(this).addClass('active');
+        activeFilter = $(this).data('filter');
+        filterHistoryTable();
+    });
+
+    // =========================================================================
     // Cleanup (with in-page modal)
     // =========================================================================
     $('#hwt-cleanup-trigger').on('click', function (e) {

@@ -953,6 +953,94 @@ h2.hwt-title {
 /* ============================================================
    HISTORY TABLE
    ============================================================ */
+.hwt-history-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.hwt-history-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid var(--hwt-gray-300);
+    border-radius: var(--hwt-radius-sm);
+    background: var(--hwt-gray-50);
+    flex: 1;
+    min-width: 200px;
+    max-width: 360px;
+    transition: border-color var(--hwt-transition), box-shadow var(--hwt-transition);
+}
+
+.hwt-history-search:focus-within {
+    border-color: var(--hwt-brand);
+    box-shadow: 0 0 0 3px rgba(0, 33, 32, 0.1);
+    background: #fff;
+}
+
+.hwt-history-search svg { color: var(--hwt-gray-500); flex-shrink: 0; }
+
+.hwt-history-search input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    width: 100%;
+    font-family: inherit;
+    color: var(--hwt-gray-800);
+}
+
+.hwt-history-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.hwt-filter-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--hwt-gray-300);
+    border-radius: 20px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--hwt-gray-600);
+    cursor: pointer;
+    transition: all var(--hwt-transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hwt-filter-btn:hover { border-color: var(--hwt-brand); color: var(--hwt-brand); }
+
+.hwt-filter-btn.active {
+    background: var(--hwt-brand);
+    border-color: var(--hwt-brand);
+    color: #fff;
+}
+
+.hwt-filter-count {
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(0,0,0,0.1);
+    padding: 1px 7px;
+    border-radius: 10px;
+}
+
+.hwt-filter-btn.active .hwt-filter-count { background: rgba(255,255,255,0.2); }
+
+.hwt-history-empty {
+    text-align: center;
+    padding: 32px;
+    color: var(--hwt-gray-500);
+    font-size: 13px;
+    display: none;
+}
+
 .hwt-history-list {
     border: 1px solid var(--hwt-gray-200);
     border-radius: var(--hwt-radius-sm);
